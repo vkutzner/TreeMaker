@@ -5,7 +5,20 @@ from TreeMaker.Utils.CommandLineParams import CommandLineParams
 parameters = CommandLineParams()
 scenarioName=parameters.value("scenario","")
 inputFilesConfig=parameters.value("inputFilesConfig","")
-dataset=parameters.value("dataset",[])
+dataset=parameters.value("dataset",[])##just try to print lots of things and understand what's happening before mucking. also, how do we use dbs to get filelists from multiple data tiers?
+
+try: sidecar = dataset.replace('MINIAOD','AOD').replace('miniAOD','AOD').replace('MiniAOD','AOD')
+except: sidecar = []
+print 'dataset initially=', dataset
+sidecar = ['/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/007EA961-C39D-E611-88DE-02163E017618.root',
+'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/4065A72F-C19D-E611-8349-FA163E342AFC.root',
+'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/542DD08D-DB9D-E611-B962-FA163E070AA1.root',
+'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/5AFF4F67-E19D-E611-B807-FA163E7707EC.root',
+'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/702991AC-CF9D-E611-A3CB-02163E01765F.root',
+'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/AE9E75CE-B69D-E611-8261-FA163E481135.root',
+'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/C8C28777-9A9D-E611-81D7-FA163E6AAC05.root']
+print 'sidecar initially=', sidecar
+
 nstart = parameters.value("nstart",0)
 nfiles = parameters.value("nfiles",-1)
 numevents=parameters.value("numevents",-1)
@@ -49,6 +62,7 @@ era=parameters.value("era",scenario.era)
 #temporary redirector fix
 #fastsim signal is phedexed to LPC Tier3
 redir=parameters.value("redir", "root://cmseos.fnal.gov/" if fastsim and signal else "root://cmsxrootd.fnal.gov/")
+redir = parameters.value("redir","root://cmsxrootd.fnal.gov/")
 
 # The process needs to be defined AFTER reading sys.argv,
 # otherwise edmConfigHash fails
@@ -64,25 +78,37 @@ process.load("Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cf
 
 # Load input files
 readFiles = cms.untracked.vstring()
+readFiles_sidecar = cms.untracked.vstring()
 
 if inputFilesConfig!="" :
+    print 'case inputFilesConfig!=""'
     if nfiles==-1:
+        print 'sam checking case 1'
         process.load("TreeMaker.Production."+inputFilesConfig+"_cff")
         readFiles.extend( process.source.fileNames )
     else:
+        print 'sam checking case 2'
         readFilesImport = getattr(__import__("TreeMaker.Production."+inputFilesConfig+"_cff",fromlist=["readFiles"]),"readFiles")
         readFiles.extend( readFilesImport[nstart:(nstart+nfiles)] )
 
-if dataset!=[] :    
+if dataset!=[] :  
     readFiles.extend( [dataset] )
 
+if sidecar!=[] :
+    readFiles_sidecar.extend( sidecar )
+    
 for f,val in enumerate(readFiles):
     if readFiles[f][0:6]=="/store":
         readFiles[f] = redir+readFiles[f]
+
+for f,val in enumerate(readFiles_sidecar):
+    if readFiles_sidecar[f][0:6]=="/store":
+        readFiles_sidecar[f] = redir+readFiles_sidecar[f]        
     
 # print out settings
 print "***** SETUP ************************************"
 print " dataset: "+str(readFiles)
+print " sidecar: "+str(readFiles_sidecar)
 print " outfile: "+outfile+"_RA2AnalysisTree"
 print " "
 print " storing lostlepton variables: "+str(lostlepton)
@@ -113,6 +139,7 @@ process = makeTreeFromMiniAOD(process,
     outfile=outfile+"_RA2AnalysisTree",
     reportfreq=reportfreq,
     dataset=readFiles,
+    sidecar=readFiles_sidecar,
     globaltag=globaltag,
     numevents=numevents,
     hadtau=hadtau,

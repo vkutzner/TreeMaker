@@ -8,6 +8,7 @@ process,
 outfile,
 reportfreq=10,
 dataset="",
+sidecar="",
 globaltag="",
 numevents=1000,
 lostlepton=False,
@@ -52,10 +53,14 @@ scenario=""
     process.maxEvents = cms.untracked.PSet(
         input = cms.untracked.int32(numevents)
     )
+    print 'dataset (for fileNames) = ', dataset
+    print 'sidecar (for seconaryFileNames) = ', sidecar
     process.source = cms.Source("PoolSource",
         fileNames = cms.untracked.vstring(dataset),
+        secondaryFileNames=cms.untracked.vstring(sidecar),
         inputCommands = cms.untracked.vstring('keep *','drop LHERunInfoProduct_*_*_*'),
     )
+    #exit(0)
     if len(jsonfile)>0: process.source.lumisToProcess = LumiList.LumiList(filename = jsonfile).getVLuminosityBlockRange()
 
     # output file
@@ -67,6 +72,7 @@ scenario=""
     VarsDouble           = cms.vstring()
     VarsInt              = cms.vstring()
     VarsBool             = cms.vstring()
+    VectorTrack          = cms.vstring()
     VectorTLorentzVector = cms.vstring()
     VectorDouble         = cms.vstring()
     VectorString         = cms.vstring()
@@ -81,6 +87,7 @@ scenario=""
         VarsDouble           = VarsDouble,
         VarsInt              = VarsInt,
         VarsBool             = VarsBool,
+        VectorTrack          = VectorTrack,        
         VectorTLorentzVector = VectorTLorentzVector,
         VectorDouble         = VectorDouble,
         VectorInt            = VectorInt,
@@ -97,6 +104,13 @@ scenario=""
     ## ----------------------------------------------------------------------------------------------
     ## SUSY scan info
     ## ----------------------------------------------------------------------------------------------
+
+    if sidecar:
+            from TreeMaker.Utils.disappearingtrackproducer_cfi import disappearingTracks
+            process.DisappearingTracks = disappearingTracks.clone(
+                    )
+            VectorTrack.extend(['DisappearingTracks:DisappearingTracks(DisappearingTracks)']) 
+    
     if geninfo:
         # mother and LSP masses for SUSY signal scans
         # branches always added, but only have values for fastsim samples

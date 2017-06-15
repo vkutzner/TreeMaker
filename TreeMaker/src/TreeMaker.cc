@@ -28,8 +28,8 @@ using namespace pat;
 //
 TreeMaker::TreeMaker(const edm::ParameterSet& iConfig)
 : tree(0),
-  VarTypeNames{"VarsBool","VarsInt","VarsDouble","VarsString","VarsTLorentzVector","VectorBool","VectorInt","VectorDouble","VectorString","VectorTLorentzVector","VectorRecoCand"},
-  VarTypes{t_bool,t_int,t_double,t_string,t_lorentz,t_vbool,t_vint,t_vdouble,t_vstring,t_vlorentz,t_recocand}
+  VarTypeNames{"VarsBool","VarsInt","VarsDouble","VarsString","VarsTLorentzVector","VectorBool","VectorInt","VectorDouble","VectorString","VectorTLorentzVector","VectorRecoCand","VectorTrack"},
+  VarTypes{t_bool,t_int,t_double,t_string,t_lorentz,t_vbool,t_vint,t_vdouble,t_vstring,t_vlorentz,t_recocand,t_vtrack}
 {
 	// general parameters
 	treeName = iConfig.getParameter<string>("TreeName");
@@ -55,6 +55,7 @@ TreeMaker::TreeMaker(const edm::ParameterSet& iConfig)
 				case TreeTypes::t_vstring  : tmp = new TreeObject<vector<string> >(VarNames[t]); break;
 				case TreeTypes::t_vlorentz : tmp = new TreeObject<vector<TLorentzVector> >(VarNames[t]); break;
 				case TreeTypes::t_recocand : tmp = new TreeRecoCand(VarNames[t],doLorentz); break;
+			        case TreeTypes::t_vtrack   : tmp = new TreeObject<vector<reco::Track> >(VarNames[t]); break;
 			}
 			//if a known type was found, initialize and store the object
 			if(tmp) {

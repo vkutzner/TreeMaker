@@ -22,6 +22,9 @@
 #include "TLorentzVector.h"
 #include "Math/GenVector/LorentzVector.h"
 
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackReco/interface/TrackFwd.h"
+
 //STL headers
 #include <memory>
 #include <vector>
@@ -33,7 +36,7 @@
 using namespace std;
 
 //enum with known types
-enum TreeTypes { t_bool=0, t_int=1, t_double=2, t_string=3, t_lorentz=4, t_vbool=100, t_vint=101, t_vdouble=102, t_vstring=103, t_vlorentz=104, t_recocand=1000 };
+enum TreeTypes { t_bool=0, t_int=1, t_double=2, t_string=3, t_lorentz=4, t_vbool=100, t_vint=101, t_vdouble=102, t_vstring=103, t_vlorentz=104, t_recocand=1000, t_vtrack=2001 };
 
 //forward declaration of helper class
 class TreeObjectBase;
@@ -195,6 +198,8 @@ void TreeObject<double>::AddBranch() { if(tree) tree->Branch(nameInTree.c_str(),
 template<>
 void TreeObject<string>::AddBranch() { if(tree) tree->Branch(nameInTree.c_str(),nameInTree.c_str(),&value); }
 template<>
+void TreeObject<vector<reco::Track>>::AddBranch() { if(tree) tree->Branch(nameInTree.c_str(),"vector<reco::Track>",&value,32000,0); }
+template<>
 void TreeObject<TLorentzVector>::AddBranch() { if(tree) tree->Branch(nameInTree.c_str(),nameInTree.c_str(),&value); }
 template<>
 void TreeObject<vector<bool> >::AddBranch() { if(tree) tree->Branch(nameInTree.c_str(),"vector<bool>",&value,32000,0); }
@@ -215,6 +220,8 @@ template<>
 void TreeObject<double>::SetDefault() { value = 9999.; }
 template<>
 void TreeObject<string>::SetDefault() { value = ""; }
+template<>
+void TreeObject<vector<reco::Track>>::SetDefault() { value.clear(); }
 template<>
 void TreeObject<TLorentzVector>::SetDefault() { value.SetXYZT(0,0,0,0); }
 template<>
