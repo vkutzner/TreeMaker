@@ -1,4 +1,5 @@
 import sys
+import os
 
 # Read parameters
 from TreeMaker.Utils.CommandLineParams import CommandLineParams
@@ -6,18 +7,19 @@ parameters = CommandLineParams()
 scenarioName=parameters.value("scenario","")
 inputFilesConfig=parameters.value("inputFilesConfig","")
 dataset=parameters.value("dataset",[])##just try to print lots of things and understand what's happening before mucking. also, how do we use dbs to get filelists from multiple data tiers?
-
-try: sidecar = dataset.replace('MINIAOD','AOD').replace('miniAOD','AOD').replace('MiniAOD','AOD')
-except: sidecar = []
+#dataset = '/store/mc/RunIISpring16MiniAODv2/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/MINIAODSIM/pLHE_PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/60000/008EDC58-EDA2-E611-9608-FA163E1F94C5.root'
+if dataset==[]: sidecar = []
+else:
+    tmpfilename = 'tmp.txt'
+    os.system('./das_client.py --query="parent file='+dataset+'" --limit=0 > '+tmpfilename)
+    ftmp = open(tmpfilename)
+    lines = ftmp.readlines()
+    ftmp.close()
+    os.system('rm '+tmpfilename)
+    sidecar = []
+    for line in lines: sidecar.append(line.strip())
 print 'dataset initially=', dataset
-sidecar = ['/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/007EA961-C39D-E611-88DE-02163E017618.root',
-'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/4065A72F-C19D-E611-8349-FA163E342AFC.root',
-'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/542DD08D-DB9D-E611-B962-FA163E070AA1.root',
-'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/5AFF4F67-E19D-E611-B807-FA163E7707EC.root',
-'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/702991AC-CF9D-E611-A3CB-02163E01765F.root',
-'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/AE9E75CE-B69D-E611-8261-FA163E481135.root',
-'/store/mc/RunIISpring16FSPremix/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/AODSIM/pLHE_80X_mcRun2_asymptotic_v12-v1/00000/C8C28777-9A9D-E611-81D7-FA163E6AAC05.root']
-print 'sidecar initially=', sidecar
+print 'sidecar initially', sidecar
 
 nstart = parameters.value("nstart",0)
 nfiles = parameters.value("nfiles",-1)
@@ -28,13 +30,13 @@ dump=parameters.value("dump",False)
 mp=parameters.value("mp",False)
 
 # background estimations on by default
-lostlepton=parameters.value("lostlepton", True)
-hadtau=parameters.value("hadtau", True)
+lostlepton=parameters.value("lostlepton", False)
+hadtau=parameters.value("hadtau", False)
 hadtaurecluster=parameters.value("hadtaurecluster", 1)
-doZinv=parameters.value("doZinv", True)
+doZinv=parameters.value("doZinv", False)
 
 # compute the PDF weights
-doPDFs=parameters.value("doPDFs", True);
+doPDFs=parameters.value("doPDFs", False);
 
 # other options off by default
 debugtracks=parameters.value("debugtracks", False)
@@ -43,7 +45,8 @@ gridcontrol=parameters.value("gridcontrol", False)
 
 # auto configuration for different scenarios
 from TreeMaker.Production.scenarios import Scenario
-scenario = Scenario(scenarioName)
+#scenario = Scenario(scenarioName)
+scenario = Scenario('Spring16Pmssm')
 
 # take command line input (w/ defaults from scenario if specified)
 globaltag=parameters.value("globaltag",scenario.globaltag)
@@ -172,7 +175,6 @@ if mp:
         reportToFileAtPostEndJob = cms.untracked.string('| gzip -c > '+outfile+'___memory___%I_EndOfJob.gz'),
         reportToFileAtPostEvent = cms.untracked.string('| gzip -c > '+outfile+'___memory___%I.gz')
     )
-
 
 # if requested, dump and exit
 if dump:

@@ -602,6 +602,7 @@ scenario=""
     from TreeMaker.TreeMaker.makeJetVars import makeJetVars
     
     if geninfo:
+        '''
         # JEC unc up
         process, JetTagJECup = JetDepot(process,
             JetTag=JetTag,
@@ -673,7 +674,7 @@ scenario=""
                               scenario=scenario,
                               SkipTag=SkipTag
         )
-
+        '''
         # finally, do central smearing and replace jet tag
         process, JetTag = JetDepot(process,
             JetTag=JetTag,
