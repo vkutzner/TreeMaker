@@ -1,23 +1,27 @@
+#/uscms_data/d3/sbein/LongLiveTheChi/20May2017/NtupleMakerSideCar/CMSSW_8_0_28/src/TreeMaker
 import sys
 import os
+
+print 'sys.argv', sys.argv
 
 # Read parameters
 from TreeMaker.Utils.CommandLineParams import CommandLineParams
 parameters = CommandLineParams()
 scenarioName=parameters.value("scenario","")
 inputFilesConfig=parameters.value("inputFilesConfig","")
-dataset=parameters.value("dataset",[])##just try to print lots of things and understand what's happening before mucking. also, how do we use dbs to get filelists from multiple data tiers?
-#dataset = '/store/mc/RunIISpring16MiniAODv2/pMSSM_MCMC1_mH-120to130_batch1_TuneCUETP8M1_13TeV-pythia8/MINIAODSIM/pLHE_PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/60000/008EDC58-EDA2-E611-9608-FA163E1F94C5.root'
+dataset=parameters.value("dataset",[])
 if dataset==[]: sidecar = []
 else:
-    tmpfilename = 'tmp.txt'
-    os.system('./das_client.py --query="parent file='+dataset+'" --limit=0 > '+tmpfilename)
-    ftmp = open(tmpfilename)
-    lines = ftmp.readlines()
-    ftmp.close()
-    os.system('rm '+tmpfilename)
     sidecar = []
-    for line in lines: sidecar.append(line.strip())
+    for d in dataset.split(','):
+        tmpfilename = 'tmp.txt'
+        print './data/das_client.py --query="parent file='+d+'" --limit=0 > '+tmpfilename
+        os.system('./data/das_client.py --query="parent file='+d+'" --limit=0 > '+tmpfilename)
+        ftmp = open(tmpfilename)
+        lines = ftmp.readlines()
+        ftmp.close()
+        os.system('rm '+tmpfilename)
+        for line in lines: sidecar.append(line.strip())
 print 'dataset initially=', dataset
 print 'sidecar initially', sidecar
 
@@ -45,8 +49,8 @@ gridcontrol=parameters.value("gridcontrol", False)
 
 # auto configuration for different scenarios
 from TreeMaker.Production.scenarios import Scenario
-#scenario = Scenario(scenarioName)
-scenario = Scenario('Spring16Pmssm')
+scenario = Scenario(scenarioName)
+#scenario = Scenario('Spring16Pmssm')
 
 # take command line input (w/ defaults from scenario if specified)
 globaltag=parameters.value("globaltag",scenario.globaltag)
@@ -93,6 +97,15 @@ if inputFilesConfig!="" :
         print 'sam checking case 2'
         readFilesImport = getattr(__import__("TreeMaker.Production."+inputFilesConfig+"_cff",fromlist=["readFiles"]),"readFiles")
         readFiles.extend( readFilesImport[nstart:(nstart+nfiles)] )
+    for rf in readFiles:
+        tmpfilename = 'tmp.txt'
+        os.system('./das_client.py --query="parent file='+rf+'" --limit=0 > '+tmpfilename)
+        ftmp = open(tmpfilename)
+        lines = ftmp.readlines()
+        ftmp.close()
+        os.system('rm '+tmpfilename)
+        for line in lines: readFiles_sidecar.append(line.strip())
+    print 'readFiles, readFiles_sidecar', readFiles, readFiles_sidecar
 
 if dataset!=[] :  
     readFiles.extend( [dataset] )

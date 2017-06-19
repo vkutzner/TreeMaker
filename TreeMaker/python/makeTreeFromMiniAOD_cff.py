@@ -108,9 +108,26 @@ scenario=""
     if sidecar:
             from TreeMaker.Utils.disappearingtrackproducer_cfi import disappearingTracks
             process.DisappearingTracks = disappearingTracks.clone(
+                doDeDx = cms.bool(not fastsim),
                     )
-            VectorTrack.extend(['DisappearingTracks:DisappearingTracks(DisappearingTracks)']) 
-    
+            VectorTLorentzVector.extend(['DisappearingTracks:chiCands(chiCands)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@dxyVtx(chiCands_dxyVtx)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@dzVtx(chiCands_dzVtx)'])
+            VectorInt.extend(['DisappearingTracks:chiCands@nMissingOuterHits(chiCands_nMissingOuterHits)'])
+            VectorInt.extend(['DisappearingTracks:chiCands@nMissingInnerHits(chiCands_nMissingInnerHits)'])
+            VectorInt.extend(['DisappearingTracks:chiCands@nMissingMiddleHits(chiCands_nMissingMiddleHits)']) 
+            VectorInt.extend(['DisappearingTracks:chiCands@nValidPixelHits(chiCands_nValidPixelHits)']) 
+            VectorInt.extend(['DisappearingTracks:chiCands@nValidTrackerHits(chiCands_nValidTrackerHits)']) 
+            VectorDouble.extend(['DisappearingTracks:chiCands@chi2perNdof(chiCands_chi2perNdof)'])          
+            VectorDouble.extend(['DisappearingTracks:chiCands@trkRelIso(chiCands_trkRelIso)'])   
+            VectorDouble.extend(['DisappearingTracks:chiCands@trkMiniRelIso(chiCands_trkMiniRelIso)'])          
+            VectorDouble.extend(['DisappearingTracks:chiCands@matchedCaloEnergy(chiCands_matchedCaloEnergy)'])
+            if not fastsim: 
+                VectorDouble.extend(['DisappearingTracks:chiCands@deDxHarmonic2(chiCands_deDxHarmonic2)']) 
+            VectorBool.extend(['DisappearingTracks:chiCands@passExo16044Tag(chiCands_passExo16044Tag)']) 
+            VectorBool.extend(['DisappearingTracks:chiCands@passExo16044JetIso(chiCands_passExo16044JetIso)']) 
+            VectorBool.extend(['DisappearingTracks:chiCands@passExo16044LepIso(chiCands_passExo16044LepIso)'])        
+            
     if geninfo:
         # mother and LSP masses for SUSY signal scans
         # branches always added, but only have values for fastsim samples
@@ -725,7 +742,7 @@ scenario=""
                           JetTag=JetTag,
                           suff='',
                           skipGoodJets=False,
-                          storeProperties=2,
+                          storeProperties=1,
                           geninfo=geninfo,
                           fastsim=fastsim,
                           scenario=scenario,
