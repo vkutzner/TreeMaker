@@ -10,12 +10,18 @@ parameters = CommandLineParams()
 scenarioName=parameters.value("scenario","")
 inputFilesConfig=parameters.value("inputFilesConfig","")
 dataset=parameters.value("dataset",[])
+privateSample=parameters.value("privateSample",False)
 if dataset==[]: sidecar = []
+elif privateSample:
+    print 'doing private sample thing'
+    sidecar = []
+    for d in dataset.split(','):
+        sidecar.append(d.replace('step3','step2').replace('miniAOD','AOD').replace('miniaod','aod'))
+        print 'grew sidecar', sidecar[-1]
 else:
     sidecar = []
     for d in dataset.split(','):
         tmpfilename = 'tmp.txt'
-        print './data/das_client.py --query="parent file='+d+'" --limit=0 > '+tmpfilename
         os.system('./data/das_client.py --query="parent file='+d+'" --limit=0 > '+tmpfilename)
         ftmp = open(tmpfilename)
         lines = ftmp.readlines()
@@ -57,6 +63,7 @@ globaltag=parameters.value("globaltag",scenario.globaltag)
 tagname=parameters.value("tagname",scenario.tagname)
 geninfo=parameters.value("geninfo",scenario.geninfo)
 pmssm=parameters.value("pmssm",scenario.pmssm)
+privateSample=parameters.value("privateSample", privateSample)
 fastsim=parameters.value("fastsim",scenario.fastsim)
 signal=parameters.value("signal",scenario.signal)
 jsonfile=parameters.value("jsonfile",scenario.jsonfile)

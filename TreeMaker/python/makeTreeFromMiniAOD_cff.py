@@ -28,6 +28,7 @@ doPDFs=False,
 fastsim=False,
 signal=False,
 pmssm=False,
+privateSample=False,
 scenario=""
 ):
 
@@ -208,8 +209,21 @@ scenario=""
         VectorTLorentzVector.append("genParticles(GenParticles)")
         VectorInt.append("genParticles:PdgId(GenParticles_PdgId)")
         VectorInt.append("genParticles:Status(GenParticles_Status)")
+        VectorInt.append("genParticles:LabXYmm(GenParticles_LabXYmm)")
         VectorInt.append("genParticles:Parent(GenParticles_ParentIdx)")
         VectorInt.append("genParticles:ParentId(GenParticles_ParentId)")
+
+        if privateSample:
+            process.genParticles2 = cms.EDProducer("GenParticlesProducer",
+                                                   genCollection = cms.untracked.InputTag("genParticlePlusGeant"),
+                                                   debug = cms.untracked.bool(False)
+            )
+            VectorTLorentzVector.append("genParticles2(GenParticlesGeant)")
+            VectorInt.append("genParticles2:PdgId(GenParticlesGeant_PdgId)")
+            VectorInt.append("genParticles2:Status(GenParticlesGeant_Status)")
+            VectorInt.append("genParticles2:LabXYmm(GenParticlesGeant_LabXYmm)")
+            VectorInt.append("genParticles2:Parent(GenParticlesGeant_ParentIdx)")
+            VectorInt.append("genParticles2:ParentId(GenParticlesGeant_ParentId)")        
         
         # for ttbar pT reweighting
         # params from: https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting#Run_2_strategy

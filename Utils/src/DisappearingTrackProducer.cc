@@ -466,8 +466,8 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
       else if (track.pt()>200) miniConeDr = 0.05;
       for( const auto& othertrack : *tracks){
 	if (deltaR(track, othertrack) == 0) continue;
-	if (deltaR(track, othertrack) < coneRelIsoDR) conePtSum_rel += track.pt();
-	if (deltaR(track, othertrack) < miniConeDr) conePtSum_mini += track.pt();
+	if (deltaR(track, othertrack) < coneRelIsoDR) conePtSum_rel += othertrack.pt();
+	if (deltaR(track, othertrack) < miniConeDr) conePtSum_mini += othertrack.pt();
       }
       if (conePtSum_rel / track.pt() <= conePtSumMaxPtPercentage) passedTrackTrackerIso = true;
       relIso = conePtSum_rel / track.pt();
