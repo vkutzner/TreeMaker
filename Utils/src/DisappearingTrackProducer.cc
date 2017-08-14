@@ -1,24 +1,3 @@
-// -*- C++ -*-
-//
-// Package:    DisappearingTrackProducer
-// Class:      DisappearingTrackProducer
-// 
-/**\class DisappearingTrackProducer DisappearingTrackProducer.cc RA2Classic/DisappearingTrackProducer/src/DisappearingTrackProducer.cc
- * 
- * Description: [one line class summary]
- * 
- * Implementation:
- *     [Notes on implementation]
- */
-//
-// Original Author:  Arne-Rasmus Draeger,68/111,4719,
-//         Created:  Fri Apr 11 16:35:33 CEST 2014
-// $Id$
-//
-//
-
-
-// system include files
 #include <memory>
 #include <string>
 #include <vector>
@@ -59,10 +38,6 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 
 
-//
-// class declaration
-//
-
 class DisappearingTrackProducer : public edm::EDProducer {
 public:
   explicit DisappearingTrackProducer(const edm::ParameterSet&);
@@ -100,11 +75,23 @@ private:
   double conePtSumMaxPtPercentage;
   double minTrackJetDR;
   double minTrackLeptonDR;
-  double RequireNumberOfValidPixelHits;
-  double RequireNumberOfValidTrackerHits;
+  int RequireNumberOfValidPixelHits;
+  int RequireNumberOfValidTrackerHits;
   double maxDxy;
   double maxDz;
-  double minMissingOuterHits;
+  int minMissingOuterHits;
+  int pixelLayersWithMeasurement;
+  int trackerLayersWithMeasurement;
+  bool trackQualityUndef;
+  bool trackQualityLoose;
+  bool trackQualityTight;
+  bool trackQualityHighPurity;
+  bool trackQualityConfirmed;
+  bool trackQualityGoodIterative;
+  bool trackQualityLooseSetWithPV;
+  bool trackQualityHighPuritySetWithPV;
+  bool trackQualityDiscarded;
+  bool trackQualitySize;
   double caloEnergyDepositionMaxDR;
   double caloEnergyDepositionMaxE;
   double deadNoisyDR;     
@@ -123,21 +110,8 @@ private:
   std::string dEdxEstimator_;
   std::string doStage;
 	
-  // ----------member data ---------------------------
 };
 
-//
-// constants, enums and typedefs
-//
-
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
 DisappearingTrackProducer::DisappearingTrackProducer(const edm::ParameterSet& iConfig)
 {
   //register your product	
@@ -145,6 +119,8 @@ DisappearingTrackProducer::DisappearingTrackProducer(const edm::ParameterSet& iC
   produces<std::vector<double> >           ("chiCands@dxyVtx");
   produces<std::vector<double> >           ("chiCands@dzVtx");
   produces<std::vector<int> >          ("chiCands@nMissingOuterHits");
+  produces<std::vector<int> >          ("chiCands@pixelLayersWithMeasurement");
+  produces<std::vector<int> >          ("chiCands@trackerLayersWithMeasurement");
   produces<std::vector<int> >         ("chiCands@nMissingInnerHits");
   produces<std::vector<int> >        ("chiCands@nMissingMiddleHits");
   produces<std::vector<int> >         ("chiCands@nValidPixelHits");
@@ -157,18 +133,17 @@ DisappearingTrackProducer::DisappearingTrackProducer(const edm::ParameterSet& iC
   produces<std::vector<bool> >        ("chiCands@passExo16044Tag");
   produces<std::vector<bool> >        ("chiCands@passExo16044JetIso");
   produces<std::vector<bool> >        ("chiCands@passExo16044LepIso");
+  produces<std::vector<bool> >          ("chiCands@trackQualityUndef");
+  produces<std::vector<bool> >          ("chiCands@trackQualityLoose");
+  produces<std::vector<bool> >          ("chiCands@trackQualityTight");
+  produces<std::vector<bool> >          ("chiCands@trackQualityHighPurity");
+  produces<std::vector<bool> >          ("chiCands@trackQualityConfirmed");
+  produces<std::vector<bool> >          ("chiCands@trackQualityGoodIterative");
+  produces<std::vector<bool> >          ("chiCands@trackQualityLooseSetWithPV");
+  produces<std::vector<bool> >          ("chiCands@trackQualityHighPuritySetWithPV");
+  produces<std::vector<bool> >          ("chiCands@trackQualityDiscarded");
+  produces<std::vector<bool> >          ("chiCands@trackQualitySize");
 
-  //produces<bool>("");
-  /* Examples
-   *   produces<ExampleData2>();
-   * 
-   *   //if do put with a label
-   *   produces<ExampleData2>("label");
-   * 
-   *   //if you want to put into the Run
-   *   produces<ExampleData2,InRun>();
-   */
-  //now do what ever other initialization is needed
   edm::InputTag PrimVtxTag_;
   PrimVtxTag_=iConfig.getParameter<edm::InputTag>("PrimaryVertex");
   PrimVtxTok_ = consumes<reco::VertexCollection>(PrimVtxTag_);
@@ -194,12 +169,12 @@ DisappearingTrackProducer::DisappearingTrackProducer(const edm::ParameterSet& iC
   conePtSumMaxPtPercentage = iConfig.getParameter<double>("conePtSumMaxPtPercentage");
   minTrackJetDR = iConfig.getParameter<double>("minTrackJetDR");
   minTrackLeptonDR = iConfig.getParameter<double>("minTrackLeptonDR");
-  RequireNumberOfValidPixelHits = iConfig.getParameter<double>("RequireNumberOfValidPixelHits");
-  RequireNumberOfValidTrackerHits = iConfig.getParameter<double>("RequireNumberOfValidTrackerHits");
+  RequireNumberOfValidPixelHits = iConfig.getParameter<int>("RequireNumberOfValidPixelHits");
+  RequireNumberOfValidTrackerHits = iConfig.getParameter<int>("RequireNumberOfValidTrackerHits");
   maxDxy = iConfig.getParameter<double>("maxDxy");
   maxDz = iConfig.getParameter<double>("maxDz");
 
-  minMissingOuterHits = iConfig.getParameter<double>("minMissingOuterHits");
+  minMissingOuterHits = iConfig.getParameter<int>("minMissingOuterHits");
   caloEnergyDepositionMaxDR = iConfig.getParameter<double>("caloEnergyDepositionMaxDR");
   caloEnergyDepositionMaxE = iConfig.getParameter<double>("caloEnergyDepositionMaxE");
   deadNoisyDR = iConfig.getParameter<double>("deadNoisyDR");
@@ -228,12 +203,7 @@ DisappearingTrackProducer::DisappearingTrackProducer(const edm::ParameterSet& iC
 
 
 DisappearingTrackProducer::~DisappearingTrackProducer()
-{
-	
-  // do anything here that needs to be done at desctruction time
-  // (e.g. close files, deallocate resources etc.)
-	
-}
+{}
 
 // check if particle is isolated with respect to another particle collection:
 template <typename T1, typename T2>
@@ -291,11 +261,6 @@ bool checkNoDeadNoisyECALInTrackCone(T hitcollection, reco::Track track, edm::ES
   return noDeadNoisyCellsInTrackCone;
 }
 
-//
-// member functions
-//
-
-// ------------ method called to produce the data  ------------
 void
 DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
@@ -336,7 +301,10 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
 
   std::unique_ptr<std::vector<double> > chiCands_dxyVtx(new std::vector<double>);
   std::unique_ptr<std::vector<double> > chiCands_dzVtx(new std::vector<double>);
+  std::unique_ptr<std::vector<int> > chiCands_trackQuality(new std::vector<int>);
   std::unique_ptr<std::vector<int> > chiCands_nMissingOuterHits(new std::vector<int>);
+  std::unique_ptr<std::vector<int> > chiCands_pixelLayersWithMeasurement(new std::vector<int>);
+  std::unique_ptr<std::vector<int> > chiCands_trackerLayersWithMeasurement(new std::vector<int>);
   std::unique_ptr<std::vector<int> > chiCands_nMissingInnerHits(new std::vector<int>);
   std::unique_ptr<std::vector<int> > chiCands_nMissingMiddleHits(new std::vector<int>);
   std::unique_ptr<std::vector<int> > chiCands_nValidPixelHits(new std::vector<int>);
@@ -349,6 +317,16 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
   std::unique_ptr<std::vector<bool> > chiCands_passExo16044JetIso(new std::vector<bool>);
   std::unique_ptr<std::vector<bool> > chiCands_passExo16044LepIso(new std::vector<bool>);
   std::unique_ptr<std::vector<bool> > chiCands_passExo16044Tag(new std::vector<bool>);
+  std::unique_ptr<std::vector<bool> > chiCands_trackQualityUndef(new std::vector<bool>);
+  std::unique_ptr<std::vector<bool> > chiCands_trackQualityLoose(new std::vector<bool>);
+  std::unique_ptr<std::vector<bool> > chiCands_trackQualityTight(new std::vector<bool>);
+  std::unique_ptr<std::vector<bool> > chiCands_trackQualityHighPurity(new std::vector<bool>);
+  std::unique_ptr<std::vector<bool> > chiCands_trackQualityConfirmed(new std::vector<bool>);
+  std::unique_ptr<std::vector<bool> > chiCands_trackQualityGoodIterative(new std::vector<bool>);
+  std::unique_ptr<std::vector<bool> > chiCands_trackQualityLooseSetWithPV(new std::vector<bool>);
+  std::unique_ptr<std::vector<bool> > chiCands_trackQualityHighPuritySetWithPV(new std::vector<bool>);
+  std::unique_ptr<std::vector<bool> > chiCands_trackQualityDiscarded(new std::vector<bool>);
+  std::unique_ptr<std::vector<bool> > chiCands_trackQualitySize(new std::vector<bool>);
 
   int itrack = -1;
   for( const auto& track : *tracks){
@@ -395,12 +373,24 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
     chiCands_dxyVtx->push_back(std::abs(track.dxy(vtx.position())));
     chiCands_dzVtx->push_back(std::abs(track.dz(vtx.position())));
     reco::HitPattern hitpattern = track.hitPattern();
+    chiCands_pixelLayersWithMeasurement->push_back(hitpattern.pixelLayersWithMeasurement());
+    chiCands_trackerLayersWithMeasurement->push_back(hitpattern.trackerLayersWithMeasurement());
     chiCands_nMissingOuterHits->push_back(hitpattern.trackerLayersWithoutMeasurement(hitpattern.MISSING_OUTER_HITS));
     chiCands_nMissingInnerHits->push_back(hitpattern.trackerLayersWithoutMeasurement(hitpattern.MISSING_INNER_HITS));
     chiCands_nMissingMiddleHits->push_back(hitpattern.trackerLayersWithoutMeasurement(hitpattern.TRACK_HITS));
     chiCands_nValidPixelHits->push_back(hitpattern.numberOfValidPixelHits());
     chiCands_nValidTrackerHits->push_back(hitpattern.numberOfValidTrackerHits());
     chiCands_chi2perNdof->push_back(1.0*track.chi2()/track.ndof());
+    chiCands_trackQualityUndef->push_back(track.quality(track.undefQuality));
+    chiCands_trackQualityLoose->push_back(track.quality(track.loose));
+    chiCands_trackQualityTight->push_back(track.quality(track.tight));
+    chiCands_trackQualityHighPurity->push_back(track.quality(track.highPurity));
+    chiCands_trackQualityConfirmed->push_back(track.quality(track.confirmed));
+    chiCands_trackQualityGoodIterative->push_back(track.quality(track.goodIterative));
+    chiCands_trackQualityLooseSetWithPV->push_back(track.quality(track.looseSetWithPV));
+    chiCands_trackQualityHighPuritySetWithPV->push_back(track.quality(track.highPuritySetWithPV));
+    chiCands_trackQualityDiscarded->push_back(track.quality(track.discarded));
+    chiCands_trackQualitySize->push_back(track.quality(track.qualitySize));
 
 
     // check if fake track:
@@ -511,6 +501,8 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.put(std::move(chiCands),"chiCands");
   iEvent.put(std::move(chiCands_dxyVtx),"chiCands@dxyVtx");
   iEvent.put(std::move(chiCands_dzVtx),"chiCands@dzVtx");
+  iEvent.put(std::move(chiCands_pixelLayersWithMeasurement),"chiCands@pixelLayersWithMeasurement");
+  iEvent.put(std::move(chiCands_trackerLayersWithMeasurement),"chiCands@trackerLayersWithMeasurement");
   iEvent.put(std::move(chiCands_nMissingOuterHits),"chiCands@nMissingOuterHits");
   iEvent.put(std::move(chiCands_nMissingInnerHits),"chiCands@nMissingInnerHits");
   iEvent.put(std::move(chiCands_nMissingMiddleHits),"chiCands@nMissingMiddleHits");
@@ -524,45 +516,46 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.put(std::move(chiCands_passExo16044JetIso),"chiCands@passExo16044JetIso");
   iEvent.put(std::move(chiCands_passExo16044LepIso),"chiCands@passExo16044LepIso");
   iEvent.put(std::move(chiCands_passExo16044Tag), "chiCands@passExo16044Tag");
-	
+  iEvent.put(std::move(chiCands_trackQualityUndef), "chiCands@trackQualityUndef");
+  iEvent.put(std::move(chiCands_trackQualityLoose), "chiCands@trackQualityLoose");
+  iEvent.put(std::move(chiCands_trackQualityTight), "chiCands@trackQualityTight");
+  iEvent.put(std::move(chiCands_trackQualityHighPurity), "chiCands@trackQualityHighPurity");
+  iEvent.put(std::move(chiCands_trackQualityConfirmed), "chiCands@trackQualityConfirmed");
+  iEvent.put(std::move(chiCands_trackQualityGoodIterative), "chiCands@trackQualityGoodIterative");
+  iEvent.put(std::move(chiCands_trackQualityLooseSetWithPV), "chiCands@trackQualityLooseSetWithPV");
+  iEvent.put(std::move(chiCands_trackQualityHighPuritySetWithPV), "chiCands@trackQualityHighPuritySetWithPV");
+  iEvent.put(std::move(chiCands_trackQualityDiscarded), "chiCands@trackQualityDiscarded");
+  iEvent.put(std::move(chiCands_trackQualitySize), "chiCands@trackQualitySize");
+
 } 
 
-// ------------ method called once each job just before starting event loop  ------------
 void 
 DisappearingTrackProducer::beginJob()
 {}
 
-// ------------ method called once each job just after ending the event loop  ------------
 void 
 DisappearingTrackProducer::endJob() {
 }
 
-// ------------ method called when starting to processes a run  ------------
 void 
 DisappearingTrackProducer::beginRun(edm::Run&, edm::EventSetup const&)
 {}
 
-// ------------ method called when ending the processing of a run  ------------
 void 
 DisappearingTrackProducer::endRun(edm::Run&, edm::EventSetup const&)
 {}
 
-// ------------ method called when starting to processes a luminosity block  ------------
 void 
 DisappearingTrackProducer::beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
 {}
 
-// ------------ method called when ending the processing of a luminosity block  ------------
 void 
 DisappearingTrackProducer::endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
 {
 }
 
-// ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
 DisappearingTrackProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
-  //The following says we do not know what parameters are allowed so do no validation
-  // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);

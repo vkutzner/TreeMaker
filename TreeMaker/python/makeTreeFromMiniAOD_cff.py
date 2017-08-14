@@ -114,6 +114,8 @@ scenario=""
             VectorTLorentzVector.extend(['DisappearingTracks:chiCands(chiCands)'])
             VectorDouble.extend(['DisappearingTracks:chiCands@dxyVtx(chiCands_dxyVtx)'])
             VectorDouble.extend(['DisappearingTracks:chiCands@dzVtx(chiCands_dzVtx)'])
+            VectorInt.extend(['DisappearingTracks:chiCands@pixelLayersWithMeasurement(chiCands_pixelLayersWithMeasurement)'])
+            VectorInt.extend(['DisappearingTracks:chiCands@trackerLayersWithMeasurement(chiCands_trackerLayersWithMeasurement)'])
             VectorInt.extend(['DisappearingTracks:chiCands@nMissingOuterHits(chiCands_nMissingOuterHits)'])
             VectorInt.extend(['DisappearingTracks:chiCands@nMissingInnerHits(chiCands_nMissingInnerHits)'])
             VectorInt.extend(['DisappearingTracks:chiCands@nMissingMiddleHits(chiCands_nMissingMiddleHits)']) 
@@ -128,6 +130,17 @@ scenario=""
             VectorBool.extend(['DisappearingTracks:chiCands@passExo16044Tag(chiCands_passExo16044Tag)']) 
             VectorBool.extend(['DisappearingTracks:chiCands@passExo16044JetIso(chiCands_passExo16044JetIso)']) 
             VectorBool.extend(['DisappearingTracks:chiCands@passExo16044LepIso(chiCands_passExo16044LepIso)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityUndef(chiCands_trackQualityUndef)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityLoose(chiCands_trackQualityLoose)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityTight(chiCands_trackQualityTight)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityHighPurity(chiCands_trackQualityHighPurity)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityConfirmed(chiCands_trackQualityConfirmed)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityGoodIterative(chiCands_trackQualityGoodIterative)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityLooseSetWithPV(chiCands_trackQualityLooseSetWithPV)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityHighPuritySetWithPV(chiCands_trackQualityHighPuritySetWithPV)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityDiscarded(chiCands_trackQualityDiscarded)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualitySize(chiCands_trackQualitySize)'])        
+
             
     if geninfo:
         # mother and LSP masses for SUSY signal scans

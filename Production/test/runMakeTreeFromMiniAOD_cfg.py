@@ -4,6 +4,13 @@ import os
 
 print 'sys.argv', sys.argv
 
+# fix DAS client SSL bug:
+os.environ['SSL_CERT_DIR'] = '/etc/pki/tls/certs:/etc/grid-security/certificates'       
+
+# if using grid-control, set correct path
+if os.environ.get("GC_SCRATCH","not_set") != "not_set":
+    os.chdir("%s/src/TreeMaker/Production/test/" % os.environ['CMSSW_BASE'])
+
 # Read parameters
 from TreeMaker.Utils.CommandLineParams import CommandLineParams
 parameters = CommandLineParams()
@@ -106,7 +113,7 @@ if inputFilesConfig!="" :
         readFiles.extend( readFilesImport[nstart:(nstart+nfiles)] )
     for rf in readFiles:
         tmpfilename = 'tmp.txt'
-        os.system('./das_client.py --query="parent file='+rf+'" --limit=0 > '+tmpfilename)
+        os.system('./data/das_client.py --query="parent file='+rf+'" --limit=0 > '+tmpfilename)
         ftmp = open(tmpfilename)
         lines = ftmp.readlines()
         ftmp.close()
@@ -156,6 +163,14 @@ if len(jerfile)>0: print " JERs applied: "+jerfile
 if len(pufile)>0: print " PU weights stored: "+pufile
 print " era of this dataset: "+era
 print "************************************************"
+
+# grid-control overwrites the secondary (sidecar) files. Store filenames
+# in temporary file for retrieval by grid-control:
+if os.environ.get("GC_SCRATCH","not_set") != "not_set":
+    fout = open('%s/sidecarfiles' % os.environ['CMSSW_BASE'], 'w+')
+    sidecarContent = str(readFiles_sidecar).split("cms.untracked.vstring(")[-1].split(")")[0]
+    fout.write(sidecarContent)
+    fout.close()
 
 from TreeMaker.TreeMaker.makeTreeFromMiniAOD_cff import makeTreeFromMiniAOD
 process = makeTreeFromMiniAOD(process,
