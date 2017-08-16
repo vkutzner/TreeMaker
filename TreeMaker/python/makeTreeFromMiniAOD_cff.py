@@ -125,6 +125,9 @@ scenario=""
             VectorDouble.extend(['DisappearingTracks:chiCands@trkRelIso(chiCands_trkRelIso)'])   
             VectorDouble.extend(['DisappearingTracks:chiCands@trkMiniRelIso(chiCands_trkMiniRelIso)'])          
             VectorDouble.extend(['DisappearingTracks:chiCands@matchedCaloEnergy(chiCands_matchedCaloEnergy)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@chargedPtSum(chiCands_chargedPtSum)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@neutralPtSum(chiCands_neutralPtSum)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@neutralWithoutGammaPtSum(chiCands_neutralWithoutGammaPtSum)'])
             if not fastsim: 
                 VectorDouble.extend(['DisappearingTracks:chiCands@deDxHarmonic2(chiCands_deDxHarmonic2)']) 
             VectorBool.extend(['DisappearingTracks:chiCands@passExo16044Tag(chiCands_passExo16044Tag)']) 

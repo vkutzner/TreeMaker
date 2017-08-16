@@ -36,7 +36,7 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
-
+#include "./DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 
 class DisappearingTrackProducer : public edm::EDProducer {
 public:
@@ -68,6 +68,7 @@ private:
   edm::EDGetTokenT<edm::SortedCollection<HORecHit,edm::StrictWeakOrdering<HORecHit> >> reducedHcalRecHitsHOToken;
   edm::EDGetTokenT<std::vector<reco::CaloJet>> caloJetsToken;
   edm::EDGetTokenT<reco::VertexCollection> PrimVtxTok_;
+  edm::EDGetTokenT<std::vector<reco::PFCandidate>> pfCandsToken;
 
   double minTrackPt;
   double maxTrackEta;
@@ -75,6 +76,8 @@ private:
   double conePtSumMaxPtPercentage;
   double minTrackJetDR;
   double minTrackLeptonDR;
+  double maxChargedPFCandSumDR;
+  double maxNeutralPFCandSumDR;
   int RequireNumberOfValidPixelHits;
   int RequireNumberOfValidTrackerHits;
   double maxDxy;
@@ -130,6 +133,9 @@ DisappearingTrackProducer::DisappearingTrackProducer(const edm::ParameterSet& iC
   produces<std::vector<double> >        ("chiCands@trkMiniRelIso");
   produces<std::vector<double> >         ("chiCands@matchedCaloEnergy");
   produces<std::vector<double> >         ("chiCands@deDxHarmonic2");
+  produces<std::vector<double> >         ("chiCands@chargedPtSum");
+  produces<std::vector<double> >         ("chiCands@neutralPtSum");
+  produces<std::vector<double> >         ("chiCands@neutralWithoutGammaPtSum");
   produces<std::vector<bool> >        ("chiCands@passExo16044Tag");
   produces<std::vector<bool> >        ("chiCands@passExo16044JetIso");
   produces<std::vector<bool> >        ("chiCands@passExo16044LepIso");
@@ -160,6 +166,8 @@ DisappearingTrackProducer::DisappearingTrackProducer(const edm::ParameterSet& iC
   reducedHcalRecHitsHFToken = consumes<edm::SortedCollection<HFRecHit,edm::StrictWeakOrdering<HFRecHit> >>(iConfig.getParameter<edm::InputTag>("selectedHcalRecHits"));
   reducedHcalRecHitsHOToken = consumes<edm::SortedCollection<HORecHit,edm::StrictWeakOrdering<HORecHit> >>(iConfig.getParameter<edm::InputTag>("selectedHcalRecHits"));
   caloJetsToken = consumes<std::vector<reco::CaloJet>>(iConfig.getParameter<edm::InputTag>("selectedCaloJets"));   
+  pfCandsToken = consumes<std::vector<reco::PFCandidate>>(iConfig.getParameter<edm::InputTag>("selectedPFCand"));
+
   edm::InputTag estimatorTag("dedxHarmonic2");
   consumes<edm::ValueMap<reco::DeDxData>>(estimatorTag);
 
@@ -173,6 +181,9 @@ DisappearingTrackProducer::DisappearingTrackProducer(const edm::ParameterSet& iC
   RequireNumberOfValidTrackerHits = iConfig.getParameter<int>("RequireNumberOfValidTrackerHits");
   maxDxy = iConfig.getParameter<double>("maxDxy");
   maxDz = iConfig.getParameter<double>("maxDz");
+
+  maxChargedPFCandSumDR = iConfig.getParameter<double>("maxChargedPFCandSumDR");
+  maxNeutralPFCandSumDR = iConfig.getParameter<double>("maxNeutralPFCandSumDR");
 
   minMissingOuterHits = iConfig.getParameter<int>("minMissingOuterHits");
   caloEnergyDepositionMaxDR = iConfig.getParameter<double>("caloEnergyDepositionMaxDR");
@@ -285,6 +296,10 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.getByToken( reducedHcalRecHitsHOToken, reducedHcalRecHitsHO);
   Handle<std::vector<reco::CaloJet>> caloJets;
   iEvent.getByToken( caloJetsToken, caloJets);
+
+  Handle<std::vector<reco::PFCandidate>> pfCands;
+  iEvent.getByToken( pfCandsToken, pfCands);
+
   edm::ESHandle<CaloGeometry> CaloGeomHandle;
   iSetup.get<CaloGeometryRecord>().get(CaloGeomHandle);
 
@@ -314,6 +329,9 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
   std::unique_ptr<std::vector<double> > chiCands_trkMiniRelIso(new std::vector<double>);
   std::unique_ptr<std::vector<double> > chiCands_matchedCaloEnergy(new std::vector<double>);
   std::unique_ptr<std::vector<double> > chiCands_deDxHarmonic2(new std::vector<double>);
+  std::unique_ptr<std::vector<double> > chiCands_chargedPtSum(new std::vector<double>);
+  std::unique_ptr<std::vector<double> > chiCands_neutralPtSum(new std::vector<double>);
+  std::unique_ptr<std::vector<double> > chiCands_neutralWithoutGammaPtSum(new std::vector<double>);
   std::unique_ptr<std::vector<bool> > chiCands_passExo16044JetIso(new std::vector<bool>);
   std::unique_ptr<std::vector<bool> > chiCands_passExo16044LepIso(new std::vector<bool>);
   std::unique_ptr<std::vector<bool> > chiCands_passExo16044Tag(new std::vector<bool>);
@@ -487,6 +505,24 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
     chiCands_passExo16044JetIso->push_back(passedTrackJetIso);
     chiCands_passExo16044LepIso->push_back(passedTrackLeptonIso);
 
+    // save charged/neutral pt sum within DR cone:
+    double chargedPtSum = 0;
+    double neutralPtSum = 0;
+    double neutralWithoutGammaPtSum = 0;
+    for( const auto& pfCand : *pfCands) {
+        if ( (deltaR(track, pfCand) < maxChargedPFCandSumDR) && (pfCand.charge() != 0) )
+                chargedPtSum += pfCand.pt();
+
+        if ( (deltaR(track, pfCand) < maxNeutralPFCandSumDR) && (pfCand.charge() == 0) ) {
+                neutralPtSum += pfCand.pt();
+                if (pfCand.pdgId() != 22) neutralWithoutGammaPtSum += pfCand.pt();
+        }
+    }
+
+    chiCands_chargedPtSum->push_back(chargedPtSum);
+    chiCands_neutralPtSum->push_back(neutralPtSum);
+    chiCands_neutralWithoutGammaPtSum->push_back(neutralWithoutGammaPtSum);
+
 
     // save new track collection:
     if (passExo16044Kinematics && passedTrackTrackerIso &&
@@ -513,6 +549,9 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.put(std::move(chiCands_trkMiniRelIso),"chiCands@trkMiniRelIso");
   iEvent.put(std::move(chiCands_matchedCaloEnergy),"chiCands@matchedCaloEnergy");
   iEvent.put(std::move(chiCands_deDxHarmonic2),"chiCands@deDxHarmonic2");
+  iEvent.put(std::move(chiCands_chargedPtSum),"chiCands@chargedPtSum");
+  iEvent.put(std::move(chiCands_neutralPtSum),"chiCands@neutralPtSum");
+  iEvent.put(std::move(chiCands_neutralWithoutGammaPtSum),"chiCands@neutralWithoutGammaPtSum");
   iEvent.put(std::move(chiCands_passExo16044JetIso),"chiCands@passExo16044JetIso");
   iEvent.put(std::move(chiCands_passExo16044LepIso),"chiCands@passExo16044LepIso");
   iEvent.put(std::move(chiCands_passExo16044Tag), "chiCands@passExo16044Tag");
