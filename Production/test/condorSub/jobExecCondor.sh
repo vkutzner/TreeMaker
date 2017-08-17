@@ -59,8 +59,10 @@ fi
 echo "xrdcp output for condor"
 for FILE in *.root
 do
-  echo "xrdcp -f ${FILE} ${OUTDIR}/${FILE}"
-  xrdcp -f ${FILE} ${OUTDIR}/${FILE} 2>&1
+  #echo "xrdcp -f ${FILE} ${OUTDIR}/${FILE}"
+  #xrdcp -f ${FILE} ${OUTDIR}/${FILE} 2>&1
+  echo "gfal-copy ${FILE} ${OUTDIR}/${FILE}"
+  gfal-copy ${FILE} ${OUTDIR}/${FILE} 2>&1
   XRDEXIT=$?
   if [[ $XRDEXIT -ne 0 ]]; then
     rm *.root
