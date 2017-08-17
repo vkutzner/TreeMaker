@@ -1,3 +1,11 @@
+//
+// authors:  Viktor Kutzner, Sam Bein
+//
+// Disappearing track candidate track producer, adapted for TreeMaker
+//
+//         Created:  Wed, 17 May 2017 13:05:08 GMT
+//
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -42,14 +50,14 @@ class DisappearingTrackProducer : public edm::EDProducer {
 public:
   explicit DisappearingTrackProducer(const edm::ParameterSet&);
   ~DisappearingTrackProducer();
-	
+    
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-	
+    
 private:
   virtual void beginJob() ;
   virtual void produce(edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
-	
+    
   virtual void beginRun(edm::Run&, edm::EventSetup const&);
   virtual void endRun(edm::Run&, edm::EventSetup const&);
   virtual void beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
@@ -67,7 +75,7 @@ private:
   edm::EDGetTokenT<edm::SortedCollection<HFRecHit,edm::StrictWeakOrdering<HFRecHit> >> reducedHcalRecHitsHFToken;
   edm::EDGetTokenT<edm::SortedCollection<HORecHit,edm::StrictWeakOrdering<HORecHit> >> reducedHcalRecHitsHOToken;
   edm::EDGetTokenT<std::vector<reco::CaloJet>> caloJetsToken;
-  edm::EDGetTokenT<reco::VertexCollection> PrimVtxTok_;
+  edm::EDGetTokenT<reco::VertexCollection> PrimVtxToken;
   edm::EDGetTokenT<std::vector<reco::PFCandidate>> pfCandsToken;
 
   double minTrackPt;
@@ -99,60 +107,50 @@ private:
   double caloEnergyDepositionMaxE;
   double deadNoisyDR;     
   bool useCaloJetsInsteadOfHits;
-  bool useKinematics = false;
-  bool useTrackTrackerIso = false;
-  bool useTrackerActivity = false;
-  bool useTrackJetIso = false;
-  bool useNoFakes = false;
-  bool useTrackLeptonIso = false;
-  bool useGapsVeto = false;
-  bool useCaloEnergy = false;
-  bool useMissingOuterHits = false;
-  bool useNoisyCaloVeto = false;
   bool doDeDx = false;
-  std::string dEdxEstimator_;
-  std::string doStage;
-	
+  std::string dEdxEstimator;
+    
 };
+
 
 DisappearingTrackProducer::DisappearingTrackProducer(const edm::ParameterSet& iConfig)
 {
-  //register your product	
+  //register your product    
   produces<std::vector<TLorentzVector> > ("chiCands");
-  produces<std::vector<double> >           ("chiCands@dxyVtx");
-  produces<std::vector<double> >           ("chiCands@dzVtx");
-  produces<std::vector<int> >          ("chiCands@nMissingOuterHits");
-  produces<std::vector<int> >          ("chiCands@pixelLayersWithMeasurement");
-  produces<std::vector<int> >          ("chiCands@trackerLayersWithMeasurement");
-  produces<std::vector<int> >         ("chiCands@nMissingInnerHits");
-  produces<std::vector<int> >        ("chiCands@nMissingMiddleHits");
-  produces<std::vector<int> >         ("chiCands@nValidPixelHits");
-  produces<std::vector<int> >          ("chiCands@nValidTrackerHits");
-  produces<std::vector<double> >          ("chiCands@chi2perNdof");
-  produces<std::vector<double> >       ("chiCands@trkRelIso");
-  produces<std::vector<double> >        ("chiCands@trkMiniRelIso");
+  produces<std::vector<double> >         ("chiCands@dxyVtx");
+  produces<std::vector<double> >         ("chiCands@dzVtx");
+  produces<std::vector<int> >            ("chiCands@nMissingOuterHits");
+  produces<std::vector<int> >            ("chiCands@pixelLayersWithMeasurement");
+  produces<std::vector<int> >            ("chiCands@trackerLayersWithMeasurement");
+  produces<std::vector<int> >            ("chiCands@nMissingInnerHits");
+  produces<std::vector<int> >            ("chiCands@nMissingMiddleHits");
+  produces<std::vector<int> >            ("chiCands@nValidPixelHits");
+  produces<std::vector<int> >            ("chiCands@nValidTrackerHits");
+  produces<std::vector<double> >         ("chiCands@chi2perNdof");
+  produces<std::vector<double> >         ("chiCands@trkRelIso");
+  produces<std::vector<double> >         ("chiCands@trkMiniRelIso");
+  produces<std::vector<double> >         ("chiCands@trackLeptonIso");
+  produces<std::vector<double> >         ("chiCands@trackJetIso");
   produces<std::vector<double> >         ("chiCands@matchedCaloEnergy");
   produces<std::vector<double> >         ("chiCands@deDxHarmonic2");
   produces<std::vector<double> >         ("chiCands@chargedPtSum");
   produces<std::vector<double> >         ("chiCands@neutralPtSum");
   produces<std::vector<double> >         ("chiCands@neutralWithoutGammaPtSum");
-  produces<std::vector<bool> >        ("chiCands@passExo16044Tag");
-  produces<std::vector<bool> >        ("chiCands@passExo16044JetIso");
-  produces<std::vector<bool> >        ("chiCands@passExo16044LepIso");
-  produces<std::vector<bool> >          ("chiCands@trackQualityUndef");
-  produces<std::vector<bool> >          ("chiCands@trackQualityLoose");
-  produces<std::vector<bool> >          ("chiCands@trackQualityTight");
-  produces<std::vector<bool> >          ("chiCands@trackQualityHighPurity");
-  produces<std::vector<bool> >          ("chiCands@trackQualityConfirmed");
-  produces<std::vector<bool> >          ("chiCands@trackQualityGoodIterative");
-  produces<std::vector<bool> >          ("chiCands@trackQualityLooseSetWithPV");
-  produces<std::vector<bool> >          ("chiCands@trackQualityHighPuritySetWithPV");
-  produces<std::vector<bool> >          ("chiCands@trackQualityDiscarded");
-  produces<std::vector<bool> >          ("chiCands@trackQualitySize");
+  produces<std::vector<bool> >           ("chiCands@passExo16044Tag");
+  produces<std::vector<bool> >           ("chiCands@passExo16044JetIso");
+  produces<std::vector<bool> >           ("chiCands@passExo16044LepIso");
+  produces<std::vector<bool> >           ("chiCands@trackQualityUndef");
+  produces<std::vector<bool> >           ("chiCands@trackQualityLoose");
+  produces<std::vector<bool> >           ("chiCands@trackQualityTight");
+  produces<std::vector<bool> >           ("chiCands@trackQualityHighPurity");
+  produces<std::vector<bool> >           ("chiCands@trackQualityConfirmed");
+  produces<std::vector<bool> >           ("chiCands@trackQualityGoodIterative");
+  produces<std::vector<bool> >           ("chiCands@trackQualityLooseSetWithPV");
+  produces<std::vector<bool> >           ("chiCands@trackQualityHighPuritySetWithPV");
+  produces<std::vector<bool> >           ("chiCands@trackQualityDiscarded");
+  produces<std::vector<bool> >           ("chiCands@trackQualitySize");
 
-  edm::InputTag PrimVtxTag_;
-  PrimVtxTag_=iConfig.getParameter<edm::InputTag>("PrimaryVertex");
-  PrimVtxTok_ = consumes<reco::VertexCollection>(PrimVtxTag_);
+  PrimVtxToken = consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("PrimaryVertex"));
 
   tracksToken = consumes<std::vector<reco::Track>>(iConfig.getParameter<edm::InputTag>("selectedTracks"));
   electronsToken = consumes<std::vector<reco::GsfElectron>>(iConfig.getParameter<edm::InputTag>("selectedElectrons"));
@@ -192,46 +190,49 @@ DisappearingTrackProducer::DisappearingTrackProducer(const edm::ParameterSet& iC
 
   useCaloJetsInsteadOfHits = iConfig.getParameter<bool>("useCaloJetsInsteadOfHits");
   doDeDx = iConfig.getParameter<bool>("doDeDx");
-  dEdxEstimator_ = iConfig.getParameter<std::string>("dEdxEstimator");
-  doStage = iConfig.getParameter<std::string>("doStage");
-   
-  if (doStage == "all") { useKinematics = true; useTrackTrackerIso = true; useTrackerActivity = true;
-    useTrackJetIso = true; useNoFakes = true; useTrackLeptonIso = true; useGapsVeto = true;
-    useCaloEnergy = true; useMissingOuterHits = true; useNoisyCaloVeto = true; }
-  else if (doStage == "Kinematics") useKinematics = true;
-  else if (doStage == "TrackerIso") useTrackTrackerIso = true;
-  else if (doStage == "TrackerActivity") useTrackerActivity = true;
-  else if (doStage == "TrackJetIso") useTrackJetIso = true;
-  else if (doStage == "NoFakes") useNoFakes = true;
-  else if (doStage == "TrackLeptonIso") useTrackLeptonIso = true;
-  else if (doStage == "GapsVeto") useGapsVeto = true;
-  else if (doStage == "CaloEnergy") useCaloEnergy = true;
-  else if (doStage == "MissingOuterHits") useMissingOuterHits = true;
-  else if (doStage == "NoisyCaloVeto") useNoisyCaloVeto = true;
-  else std::cout << "Unknown stage label!" << std::endl;
-	
+  dEdxEstimator = iConfig.getParameter<std::string>("dEdxEstimator");
+       
 }
 
 
 DisappearingTrackProducer::~DisappearingTrackProducer()
 {}
 
-// check if particle is isolated with respect to another particle collection:
+
+template <typename T1, typename T2>
+double getParticleIsolation(T1 particle, T2 pcollection){
+
+  // get DR of a selected particle with respect to all other particles in a given collection
+
+  double minDR = 1e6;
+  for( const auto& item : *pcollection){
+    if ((deltaR(particle, item) < minDR) && (deltaR(particle, item) != 0)) minDR = deltaR(particle, item);
+  }
+  return minDR;
+}
+
+
 template <typename T1, typename T2>
 bool checkParticleIsolation(T1 particle, T2 pcollection, double RequiredMinDR){
+
+  // checks particle isolation with respect to another particle collection,
+  // returns true if two particles are not inside a cone with minimal DR.
 
   bool isolated = false;
   double minDR = 1e6;
   for( const auto& item : *pcollection){
-    if (deltaR(particle, item) < minDR) minDR = deltaR(particle, item);
+    if ((deltaR(particle, item) < minDR) && (deltaR(particle, item) != 0)) minDR = deltaR(particle, item);
   }
   if (minDR > RequiredMinDR) isolated = true;
+
   return isolated;
 }
 
-// function for looping over one single recHit collection:
+
 template <typename T>
 double LoopOverRecHits(T hitcollection, reco::Track track, edm::ESHandle<CaloGeometry> CaloGeomHandle, double caloEnergyDepositionMaxDR){
+
+  // get deposited energy for a single recHit collection inside a cone of max DR around a selected track
    
   double energyDepositedPerCalorimeter = 0;      
   for( const auto& hit : *hitcollection){ 
@@ -248,9 +249,11 @@ double LoopOverRecHits(T hitcollection, reco::Track track, edm::ESHandle<CaloGeo
   return energyDepositedPerCalorimeter;
 }
 
-// check dead or noisy ECAL channels:
+
 template <typename T>
 bool checkNoDeadNoisyECALInTrackCone(T hitcollection, reco::Track track, edm::ESHandle<CaloGeometry> CaloGeomHandle, double DeadNoisyDR){
+
+  // check if selected track points to dead or noisy ECAL channels within a cone of max DR:
    
   double noDeadNoisyCellsInTrackCone = true;
 
@@ -264,7 +267,7 @@ bool checkNoDeadNoisyECALInTrackCone(T hitcollection, reco::Track track, edm::ES
 
     if (hit.checkFlags(badFlags)) {
       if (deltaR(cellEta, cellPhi, track.eta(), track.phi()) < DeadNoisyDR) {
-	noDeadNoisyCellsInTrackCone = false;
+           noDeadNoisyCellsInTrackCone = false;
       }
     }
   }
@@ -272,16 +275,20 @@ bool checkNoDeadNoisyECALInTrackCone(T hitcollection, reco::Track track, edm::ES
   return noDeadNoisyCellsInTrackCone;
 }
 
-void
-DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
+
+void DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
   
   // register input collections:
-  Handle<std::vector<reco::Track>> tracks; iEvent.getByToken( tracksToken, tracks);
-  Handle<std::vector<reco::GsfElectron>> electrons; iEvent.getByToken( electronsToken, electrons);
-  Handle<std::vector<reco::Muon>> muons; iEvent.getByToken( muonsToken, muons);
-  Handle<std::vector<reco::PFJet>> jets; iEvent.getByToken( jetsToken, jets);
+  Handle<std::vector<reco::Track>> tracks;
+  iEvent.getByToken( tracksToken, tracks);
+  Handle<std::vector<reco::GsfElectron>> electrons;
+  iEvent.getByToken( electronsToken, electrons);
+  Handle<std::vector<reco::Muon>> muons;
+  iEvent.getByToken( muonsToken, muons);
+  Handle<std::vector<reco::PFJet>> jets;
+  iEvent.getByToken( jetsToken, jets);
   Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> reducedEcalRecHitsEB;
   iEvent.getByToken( reducedEcalRecHitsEBToken, reducedEcalRecHitsEB);
   Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >> reducedEcalRecHitsEE;
@@ -296,22 +303,21 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.getByToken( reducedHcalRecHitsHOToken, reducedHcalRecHitsHO);
   Handle<std::vector<reco::CaloJet>> caloJets;
   iEvent.getByToken( caloJetsToken, caloJets);
-
   Handle<std::vector<reco::PFCandidate>> pfCands;
   iEvent.getByToken( pfCandsToken, pfCands);
+
+  edm::Handle<edm::ValueMap<reco::DeDxData>> dEdxTrackHandle;
+  iEvent.getByLabel(dEdxEstimator, dEdxTrackHandle);
+  const edm::ValueMap<reco::DeDxData> dEdxTrack = *dEdxTrackHandle.product();
 
   edm::ESHandle<CaloGeometry> CaloGeomHandle;
   iSetup.get<CaloGeometryRecord>().get(CaloGeomHandle);
 
-  edm::Handle<edm::ValueMap<reco::DeDxData>> dEdxTrackHandle;
-  iEvent.getByLabel(dEdxEstimator_, dEdxTrackHandle);
-  const edm::ValueMap<reco::DeDxData> dEdxTrack = *dEdxTrackHandle.product();
-
   edm::Handle<reco::VertexCollection> vtx_h;
-  iEvent.getByToken(PrimVtxTok_, vtx_h);
+  iEvent.getByToken(PrimVtxToken, vtx_h);
   const reco::Vertex vtx = vtx_h->at(0);
 
-  // register output track collection:
+  // register output:
   std::unique_ptr<std::vector<TLorentzVector> > chiCands(new std::vector<TLorentzVector>);
 
   std::unique_ptr<std::vector<double> > chiCands_dxyVtx(new std::vector<double>);
@@ -327,6 +333,8 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
   std::unique_ptr<std::vector<double> > chiCands_chi2perNdof(new std::vector<double>);
   std::unique_ptr<std::vector<double> > chiCands_trkRelIso(new std::vector<double>);
   std::unique_ptr<std::vector<double> > chiCands_trkMiniRelIso(new std::vector<double>);
+  std::unique_ptr<std::vector<double> > chiCands_trackJetIso(new std::vector<double>);
+  std::unique_ptr<std::vector<double> > chiCands_trackLeptonIso(new std::vector<double>);
   std::unique_ptr<std::vector<double> > chiCands_matchedCaloEnergy(new std::vector<double>);
   std::unique_ptr<std::vector<double> > chiCands_deDxHarmonic2(new std::vector<double>);
   std::unique_ptr<std::vector<double> > chiCands_chargedPtSum(new std::vector<double>);
@@ -351,38 +359,25 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
     itrack+=1;
 
     // check track kinematics:
-    bool passedTrackKinematics = false;
-    if (!useKinematics) passedTrackKinematics = true;
-    else if ((track.pt() > minTrackPt) && (std::abs(track.eta())) < maxTrackEta) passedTrackKinematics = true;
-    if (!(passedTrackKinematics)) continue;
-
+    bool trackKinematics = ((track.pt() > minTrackPt) && (std::abs(track.eta())) < maxTrackEta);
+    if (!(trackKinematics)) continue;
 
     bool passExo16044Kinematics = track.pt() > 55 && std::abs(track.eta()) < 2.1;
 
     // check gaps veto:
-    bool passedGapsVeto = true;
-    if ( useGapsVeto && (std::abs(track.eta()) > 0.15) && (std::abs(track.eta()) < 0.35)) passedGapsVeto = false;
-    if ( useGapsVeto && (std::abs(track.eta()) > 1.55) && (std::abs(track.eta()) < 1.85)) passedGapsVeto = false;
-    if ( useGapsVeto && (std::abs(track.eta()) > 1.42) && (std::abs(track.eta()) < 1.65)) passedGapsVeto = false;
-    if (!(passedGapsVeto)) continue;
-
+    if ((std::abs(track.eta()) > 0.15) && (std::abs(track.eta()) < 0.35)) continue;
+    if ((std::abs(track.eta()) > 1.55) && (std::abs(track.eta()) < 1.85)) continue;
+    if ((std::abs(track.eta()) > 1.42) && (std::abs(track.eta()) < 1.65)) continue;
 
     // check dead or noisy calo cells:
-    bool passedNoisyCaloVeto = false;
-    if (!useNoisyCaloVeto) passedNoisyCaloVeto = true;
-    else {
-      passedNoisyCaloVeto = checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsEB, track, CaloGeomHandle, deadNoisyDR) &
-	checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsEE, track, CaloGeomHandle, deadNoisyDR) &
-	checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsES, track, CaloGeomHandle, deadNoisyDR);
-    }
-    if (!(passedNoisyCaloVeto)) continue;
+    bool noDeadNoisyECALInTrackCone = checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsEB, track, CaloGeomHandle, deadNoisyDR) &
+    checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsEE, track, CaloGeomHandle, deadNoisyDR) &
+    checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsES, track, CaloGeomHandle, deadNoisyDR);
+    if (!(noDeadNoisyECALInTrackCone)) continue;
 
-
-    // do vertex consistency
-
+    // do vertex consistency:
     bool vertex_match = std::abs(track.dxy(vtx.position())) < maxDxy && std::abs(track.dz(vtx.position())) < maxDz;
     if (!(vertex_match)) continue;
-
 
     //This completes the loose candidate selection, so now fill the products depending only on track object
     TLorentzVector tlv;
@@ -411,100 +406,6 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
     chiCands_trackQualitySize->push_back(track.quality(track.qualitySize));
 
 
-    // check if fake track:
-    bool passedNoFakes = false;
-    if (!useNoFakes) passedNoFakes = true;
-    else {
-      if ( (hitpattern.numberOfValidPixelHits() >= RequireNumberOfValidPixelHits) && (hitpattern.numberOfValidTrackerHits() >= RequireNumberOfValidTrackerHits) ) {
-	// no missing inner or middle hits, require consecutive pattern of hits:
-	if ( hitpattern.trackerLayersWithoutMeasurement(hitpattern.MISSING_INNER_HITS) == 0 &&
-	     hitpattern.trackerLayersWithoutMeasurement(hitpattern.TRACK_HITS) == 0) 
-	  {
-	    // check track displacement:
-	    if ( vertex_match ) passedNoFakes = true;
-	  }
-      }
-    }
-
-      
-        
-    // check calo energy deposition:
-    double energyDeposited = 0;
-    if (!useCaloJetsInsteadOfHits) {        
-      // loop over ecal and hcal recHit collections:
-      if (reducedEcalRecHitsEB.isValid()) energyDeposited += LoopOverRecHits(reducedEcalRecHitsEB, track, CaloGeomHandle, caloEnergyDepositionMaxDR);
-      if (reducedEcalRecHitsEE.isValid()) energyDeposited += LoopOverRecHits(reducedEcalRecHitsEE, track, CaloGeomHandle, caloEnergyDepositionMaxDR);
-      if (reducedEcalRecHitsES.isValid()) energyDeposited += LoopOverRecHits(reducedEcalRecHitsES, track, CaloGeomHandle, caloEnergyDepositionMaxDR);
-      if (reducedHcalRecHitsHB.isValid()) energyDeposited += LoopOverRecHits(reducedHcalRecHitsHB, track, CaloGeomHandle, caloEnergyDepositionMaxDR); //check input
-      if (reducedHcalRecHitsHF.isValid()) energyDeposited += LoopOverRecHits(reducedHcalRecHitsHF, track, CaloGeomHandle, caloEnergyDepositionMaxDR); //check input
-      if (reducedHcalRecHitsHO.isValid()) energyDeposited += LoopOverRecHits(reducedHcalRecHitsHO, track, CaloGeomHandle, caloEnergyDepositionMaxDR); //check input
-    } else {
-      // optional cross-check, loop over calojets:
-      for( const auto& jet : *caloJets){ 
-	if (deltaR(jet.detectorP4().eta(), jet.detectorP4().phi(), track.eta(), track.phi()) < caloEnergyDepositionMaxDR) 
-	  {
-	    energyDeposited += jet.maxEInEmTowers() + jet.maxEInHadTowers();
-	  }
-      }
-    }
-
-    bool passedCaloEnergy = false;
-    if (!useCaloEnergy) passedCaloEnergy = true;
-    else if (energyDeposited < caloEnergyDepositionMaxE) passedCaloEnergy = true;
-
-
-    // check minimum of missing outer hits:
-    bool passedMissingOuterHits = false;
-    if (!useMissingOuterHits) passedMissingOuterHits = true;
-    else {
-      int missingOuterHits = hitpattern.stripLayersWithoutMeasurement(hitpattern.MISSING_OUTER_HITS);
-      if(missingOuterHits > minMissingOuterHits) passedMissingOuterHits = true;
-    }
-
-    // check pt sum of tracker activity within a cone around current track:
-    bool passedTrackTrackerIso = false;
-    double relIso = -1;
-    double miniIso = -1;
-    if (!useTrackTrackerIso) passedTrackTrackerIso = true;
-    else {
-      double conePtSum_rel  = 0;
-      double conePtSum_mini = 0;
-      double miniConeDr = 0.2;
-      if (track.pt()>50) miniConeDr = 10.0/track.pt();
-      else if (track.pt()>200) miniConeDr = 0.05;
-      for( const auto& othertrack : *tracks){
-	if (deltaR(track, othertrack) == 0) continue;
-	if (deltaR(track, othertrack) < coneRelIsoDR) conePtSum_rel += othertrack.pt();
-	if (deltaR(track, othertrack) < miniConeDr) conePtSum_mini += othertrack.pt();
-      }
-      if (conePtSum_rel / track.pt() <= conePtSumMaxPtPercentage) passedTrackTrackerIso = true;
-      relIso = conePtSum_rel / track.pt();
-      miniIso = conePtSum_mini / track.pt();
-    }
-    
-
-    // check track/jet isolation:
-    bool passedTrackJetIso = false;
-    if (!useTrackJetIso) passedTrackJetIso = true;
-    else passedTrackJetIso = checkParticleIsolation(track, jets, minTrackJetDR);
-    passedTrackJetIso = true;//hack because this is killing everything. should include below as well.
-
-    // check track / lepton isolation:
-    bool passedTrackLeptonIso = false;
-    if (!useTrackLeptonIso) passedTrackLeptonIso = true;
-    else passedTrackLeptonIso = checkParticleIsolation(track, electrons, minTrackLeptonDR) &
-	   checkParticleIsolation(track, muons, minTrackLeptonDR);
-    
-    double dedx = -1;
-    if (doDeDx) dedx = dEdxTrack[reco::TrackRef(tracks, itrack)].dEdx();
-	
-    chiCands_deDxHarmonic2->push_back(dedx);
-    chiCands_trkRelIso->push_back(relIso);
-    chiCands_trkMiniRelIso->push_back(miniIso);
-    chiCands_matchedCaloEnergy->push_back(energyDeposited);
-    chiCands_passExo16044JetIso->push_back(passedTrackJetIso);
-    chiCands_passExo16044LepIso->push_back(passedTrackLeptonIso);
-
     // save charged/neutral pt sum within DR cone:
     double chargedPtSum = 0;
     double neutralPtSum = 0;
@@ -518,83 +419,158 @@ DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
                 if (pfCand.pdgId() != 22) neutralWithoutGammaPtSum += pfCand.pt();
         }
     }
-
     chiCands_chargedPtSum->push_back(chargedPtSum);
     chiCands_neutralPtSum->push_back(neutralPtSum);
     chiCands_neutralWithoutGammaPtSum->push_back(neutralWithoutGammaPtSum);
 
 
-    // save new track collection:
-    if (passExo16044Kinematics && passedTrackTrackerIso &&
-	passedNoFakes && passedTrackLeptonIso && passedGapsVeto &&
-	passedCaloEnergy && passedMissingOuterHits && passedNoisyCaloVeto) {//missing && passedTrackJetIso bug?
-      chiCands_passExo16044Tag->push_back(true);
+    // now perform the tight selection:
+
+    // check if fake track:
+    bool passedNoFakes = false;
+    if ( (hitpattern.numberOfValidPixelHits() >= RequireNumberOfValidPixelHits) &&
+         (hitpattern.numberOfValidTrackerHits() >= RequireNumberOfValidTrackerHits) ) {
+          // checked for minimal number of hits, now require no missing inner or middle hits:
+          if ( hitpattern.trackerLayersWithoutMeasurement(hitpattern.MISSING_INNER_HITS) == 0 &&
+               hitpattern.trackerLayersWithoutMeasurement(hitpattern.TRACK_HITS) == 0) {
+                // check track displacement:
+                if ( vertex_match ) passedNoFakes = true;
+          }
     }
+          
+        
+    // check calo energy deposition:
+    double energyDeposited = 0;
+    if (!useCaloJetsInsteadOfHits) {        
+      if (reducedEcalRecHitsEB.isValid()) energyDeposited += LoopOverRecHits(reducedEcalRecHitsEB, track, CaloGeomHandle, caloEnergyDepositionMaxDR);
+      if (reducedEcalRecHitsEE.isValid()) energyDeposited += LoopOverRecHits(reducedEcalRecHitsEE, track, CaloGeomHandle, caloEnergyDepositionMaxDR);
+      if (reducedEcalRecHitsES.isValid()) energyDeposited += LoopOverRecHits(reducedEcalRecHitsES, track, CaloGeomHandle, caloEnergyDepositionMaxDR);
+      if (reducedHcalRecHitsHB.isValid()) energyDeposited += LoopOverRecHits(reducedHcalRecHitsHB, track, CaloGeomHandle, caloEnergyDepositionMaxDR); //check input!
+      if (reducedHcalRecHitsHF.isValid()) energyDeposited += LoopOverRecHits(reducedHcalRecHitsHF, track, CaloGeomHandle, caloEnergyDepositionMaxDR); //check input!
+      if (reducedHcalRecHitsHO.isValid()) energyDeposited += LoopOverRecHits(reducedHcalRecHitsHO, track, CaloGeomHandle, caloEnergyDepositionMaxDR); //check input!
+    } else {
+      // optional cross-check, loop over calojets:
+      for( const auto& jet : *caloJets){ 
+           if (deltaR(jet.detectorP4().eta(), jet.detectorP4().phi(), track.eta(), track.phi()) < caloEnergyDepositionMaxDR) {
+               energyDeposited += jet.maxEInEmTowers() + jet.maxEInHadTowers();
+           }
+      }
+    }
+
+    bool passedCaloEnergy = false;
+    if (energyDeposited < caloEnergyDepositionMaxE) passedCaloEnergy = true;
+    chiCands_matchedCaloEnergy->push_back(energyDeposited);
+
+    // check minimum of missing outer hits:
+    bool passedMissingOuterHits = false;
+    int missingOuterHits = hitpattern.stripLayersWithoutMeasurement(hitpattern.MISSING_OUTER_HITS);
+    if (missingOuterHits > minMissingOuterHits) passedMissingOuterHits = true;
+
+
+    // check pt sum of tracker activity within a cone around current track:
+    bool passedTrackTrackerIso = false;
+    double relIso = -1;
+    double miniIso = -1;
+    double conePtSum_rel  = 0;
+    double conePtSum_mini = 0;
+    double miniConeDr = 0.2;
+    if (track.pt()>50) miniConeDr = 10.0/track.pt();
+    else if (track.pt()>200) miniConeDr = 0.05;
+    for (const auto& othertrack : *tracks){
+        if (deltaR(track, othertrack) == 0) continue;
+        if (deltaR(track, othertrack) < coneRelIsoDR) conePtSum_rel += othertrack.pt();
+        if (deltaR(track, othertrack) < miniConeDr) conePtSum_mini += othertrack.pt();
+    }
+    if (conePtSum_rel / track.pt() <= conePtSumMaxPtPercentage) passedTrackTrackerIso = true;
+    relIso = conePtSum_rel / track.pt();
+    miniIso = conePtSum_mini / track.pt();
+
+    chiCands_trkRelIso->push_back(relIso);
+    chiCands_trkMiniRelIso->push_back(miniIso);    
+
+
+    // check track/jet isolation:
+    double trackIsoDR = getParticleIsolation(track, jets);
+    chiCands_trackJetIso->push_back(trackIsoDR);
+
+    bool passedTrackJetIso = false;
+    if (trackIsoDR > minTrackJetDR) passedTrackJetIso = true;
+    chiCands_passExo16044JetIso->push_back(passedTrackJetIso);
+
+
+    // check track / lepton isolation:
+    double trackLeptonIso = std::min(getParticleIsolation(track, electrons), getParticleIsolation(track, muons));
+    chiCands_trackLeptonIso->push_back(trackLeptonIso);
+
+    bool passedTrackLeptonIso = false;
+    if (trackLeptonIso > minTrackLeptonDR) passedTrackLeptonIso = true;
+    chiCands_passExo16044LepIso->push_back(passedTrackLeptonIso);
+    
+
+    // save dE/dx:
+    double dedx = -1;
+    if (doDeDx) dedx = dEdxTrack[reco::TrackRef(tracks, itrack)].dEdx();
+    chiCands_deDxHarmonic2->push_back(dedx);
+
+
+    // check if EXO-16-044 selection criteria are satisfied:
+    if (passExo16044Kinematics && passedTrackTrackerIso &&
+        passedNoFakes && passedTrackLeptonIso && passedTrackJetIso && 
+        passedCaloEnergy && passedMissingOuterHits) chiCands_passExo16044Tag->push_back(true);
     else chiCands_passExo16044Tag->push_back(false);
+
   }
 
   // save track collection in event:
-  iEvent.put(std::move(chiCands),"chiCands");
-  iEvent.put(std::move(chiCands_dxyVtx),"chiCands@dxyVtx");
-  iEvent.put(std::move(chiCands_dzVtx),"chiCands@dzVtx");
-  iEvent.put(std::move(chiCands_pixelLayersWithMeasurement),"chiCands@pixelLayersWithMeasurement");
-  iEvent.put(std::move(chiCands_trackerLayersWithMeasurement),"chiCands@trackerLayersWithMeasurement");
-  iEvent.put(std::move(chiCands_nMissingOuterHits),"chiCands@nMissingOuterHits");
-  iEvent.put(std::move(chiCands_nMissingInnerHits),"chiCands@nMissingInnerHits");
-  iEvent.put(std::move(chiCands_nMissingMiddleHits),"chiCands@nMissingMiddleHits");
-  iEvent.put(std::move(chiCands_nValidPixelHits),"chiCands@nValidPixelHits");
-  iEvent.put(std::move(chiCands_nValidTrackerHits),"chiCands@nValidTrackerHits");
-  iEvent.put(std::move(chiCands_chi2perNdof),"chiCands@chi2perNdof");
-  iEvent.put(std::move(chiCands_trkRelIso),"chiCands@trkRelIso");
-  iEvent.put(std::move(chiCands_trkMiniRelIso),"chiCands@trkMiniRelIso");
-  iEvent.put(std::move(chiCands_matchedCaloEnergy),"chiCands@matchedCaloEnergy");
-  iEvent.put(std::move(chiCands_deDxHarmonic2),"chiCands@deDxHarmonic2");
-  iEvent.put(std::move(chiCands_chargedPtSum),"chiCands@chargedPtSum");
-  iEvent.put(std::move(chiCands_neutralPtSum),"chiCands@neutralPtSum");
-  iEvent.put(std::move(chiCands_neutralWithoutGammaPtSum),"chiCands@neutralWithoutGammaPtSum");
-  iEvent.put(std::move(chiCands_passExo16044JetIso),"chiCands@passExo16044JetIso");
-  iEvent.put(std::move(chiCands_passExo16044LepIso),"chiCands@passExo16044LepIso");
-  iEvent.put(std::move(chiCands_passExo16044Tag), "chiCands@passExo16044Tag");
-  iEvent.put(std::move(chiCands_trackQualityUndef), "chiCands@trackQualityUndef");
-  iEvent.put(std::move(chiCands_trackQualityLoose), "chiCands@trackQualityLoose");
-  iEvent.put(std::move(chiCands_trackQualityTight), "chiCands@trackQualityTight");
-  iEvent.put(std::move(chiCands_trackQualityHighPurity), "chiCands@trackQualityHighPurity");
-  iEvent.put(std::move(chiCands_trackQualityConfirmed), "chiCands@trackQualityConfirmed");
-  iEvent.put(std::move(chiCands_trackQualityGoodIterative), "chiCands@trackQualityGoodIterative");
-  iEvent.put(std::move(chiCands_trackQualityLooseSetWithPV), "chiCands@trackQualityLooseSetWithPV");
+  iEvent.put(std::move(chiCands),                                 "chiCands");
+  iEvent.put(std::move(chiCands_dxyVtx),                          "chiCands@dxyVtx");
+  iEvent.put(std::move(chiCands_dzVtx),                           "chiCands@dzVtx");
+  iEvent.put(std::move(chiCands_pixelLayersWithMeasurement),      "chiCands@pixelLayersWithMeasurement");
+  iEvent.put(std::move(chiCands_trackerLayersWithMeasurement),    "chiCands@trackerLayersWithMeasurement");
+  iEvent.put(std::move(chiCands_nMissingOuterHits),               "chiCands@nMissingOuterHits");
+  iEvent.put(std::move(chiCands_nMissingInnerHits),               "chiCands@nMissingInnerHits");
+  iEvent.put(std::move(chiCands_nMissingMiddleHits),              "chiCands@nMissingMiddleHits");
+  iEvent.put(std::move(chiCands_nValidPixelHits),                 "chiCands@nValidPixelHits");
+  iEvent.put(std::move(chiCands_nValidTrackerHits),               "chiCands@nValidTrackerHits");
+  iEvent.put(std::move(chiCands_chi2perNdof),                     "chiCands@chi2perNdof");
+  iEvent.put(std::move(chiCands_trkRelIso),                       "chiCands@trkRelIso");
+  iEvent.put(std::move(chiCands_trkMiniRelIso),                   "chiCands@trkMiniRelIso");
+  iEvent.put(std::move(chiCands_trackJetIso),                     "chiCands@trackJetIso");
+  iEvent.put(std::move(chiCands_trackLeptonIso),                  "chiCands@trackLeptonIso");
+  iEvent.put(std::move(chiCands_matchedCaloEnergy),               "chiCands@matchedCaloEnergy");
+  iEvent.put(std::move(chiCands_deDxHarmonic2),                   "chiCands@deDxHarmonic2");
+  iEvent.put(std::move(chiCands_chargedPtSum),                    "chiCands@chargedPtSum");
+  iEvent.put(std::move(chiCands_neutralPtSum),                    "chiCands@neutralPtSum");
+  iEvent.put(std::move(chiCands_neutralWithoutGammaPtSum),        "chiCands@neutralWithoutGammaPtSum");
+  iEvent.put(std::move(chiCands_passExo16044JetIso),              "chiCands@passExo16044JetIso");
+  iEvent.put(std::move(chiCands_passExo16044LepIso),              "chiCands@passExo16044LepIso");
+  iEvent.put(std::move(chiCands_passExo16044Tag),                 "chiCands@passExo16044Tag");
+  iEvent.put(std::move(chiCands_trackQualityUndef),               "chiCands@trackQualityUndef");
+  iEvent.put(std::move(chiCands_trackQualityLoose),               "chiCands@trackQualityLoose");
+  iEvent.put(std::move(chiCands_trackQualityTight),               "chiCands@trackQualityTight");
+  iEvent.put(std::move(chiCands_trackQualityHighPurity),          "chiCands@trackQualityHighPurity");
+  iEvent.put(std::move(chiCands_trackQualityConfirmed),           "chiCands@trackQualityConfirmed");
+  iEvent.put(std::move(chiCands_trackQualityGoodIterative),       "chiCands@trackQualityGoodIterative");
+  iEvent.put(std::move(chiCands_trackQualityLooseSetWithPV),      "chiCands@trackQualityLooseSetWithPV");
   iEvent.put(std::move(chiCands_trackQualityHighPuritySetWithPV), "chiCands@trackQualityHighPuritySetWithPV");
-  iEvent.put(std::move(chiCands_trackQualityDiscarded), "chiCands@trackQualityDiscarded");
-  iEvent.put(std::move(chiCands_trackQualitySize), "chiCands@trackQualitySize");
+  iEvent.put(std::move(chiCands_trackQualityDiscarded),           "chiCands@trackQualityDiscarded");
+  iEvent.put(std::move(chiCands_trackQualitySize),                "chiCands@trackQualitySize");
 
-} 
-
-void 
-DisappearingTrackProducer::beginJob()
-{}
-
-void 
-DisappearingTrackProducer::endJob() {
 }
 
-void 
-DisappearingTrackProducer::beginRun(edm::Run&, edm::EventSetup const&)
-{}
+void DisappearingTrackProducer::beginJob() {}
 
-void 
-DisappearingTrackProducer::endRun(edm::Run&, edm::EventSetup const&)
-{}
+void DisappearingTrackProducer::endJob() {}
 
-void 
-DisappearingTrackProducer::beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
-{}
+void DisappearingTrackProducer::beginRun(edm::Run&, edm::EventSetup const&) {}
 
-void 
-DisappearingTrackProducer::endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
-{
-}
+void DisappearingTrackProducer::endRun(edm::Run&, edm::EventSetup const&) {}
 
-void
-DisappearingTrackProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+void DisappearingTrackProducer::beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&) {}
+
+void DisappearingTrackProducer::endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&) {}
+
+void DisappearingTrackProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);

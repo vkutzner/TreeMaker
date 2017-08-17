@@ -124,6 +124,8 @@ scenario=""
             VectorDouble.extend(['DisappearingTracks:chiCands@chi2perNdof(chiCands_chi2perNdof)'])          
             VectorDouble.extend(['DisappearingTracks:chiCands@trkRelIso(chiCands_trkRelIso)'])   
             VectorDouble.extend(['DisappearingTracks:chiCands@trkMiniRelIso(chiCands_trkMiniRelIso)'])          
+            VectorDouble.extend(['DisappearingTracks:chiCands@trackJetIso(chiCands_trackJetIso)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@trackLeptonIso(chiCands_trackLeptonIso)'])                    
             VectorDouble.extend(['DisappearingTracks:chiCands@matchedCaloEnergy(chiCands_matchedCaloEnergy)'])
             VectorDouble.extend(['DisappearingTracks:chiCands@chargedPtSum(chiCands_chargedPtSum)'])
             VectorDouble.extend(['DisappearingTracks:chiCands@neutralPtSum(chiCands_neutralPtSum)'])
