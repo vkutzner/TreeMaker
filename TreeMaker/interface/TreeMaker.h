@@ -14,6 +14,8 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackReco/interface/TrackFwd.h"
 
 //ROOT headers
 #include "TString.h"
@@ -33,7 +35,7 @@
 using namespace std;
 
 //enum with known types
-enum TreeTypes { t_bool=0, t_int=1, t_double=2, t_string=3, t_lorentz=4, t_vbool=100, t_vint=101, t_vdouble=102, t_vstring=103, t_vlorentz=104, t_recocand=1000 };
+enum TreeTypes { t_bool=0, t_int=1, t_double=2, t_string=3, t_lorentz=4, t_vbool=100, t_vint=101, t_vdouble=102, t_vstring=103, t_vlorentz=104, t_recocand=1000, t_vtrack=2001 };
 
 //forward declaration of helper class
 class TreeObjectBase;
@@ -207,6 +209,9 @@ void TreeObject<vector<string> >::AddBranch() { if(tree) tree->Branch(nameInTree
 template<>
 void TreeObject<vector<TLorentzVector> >::AddBranch() { if(tree) tree->Branch(nameInTree.c_str(),"vector<TLorentzVector>",&value,32000,0); }
 
+template<> 
+void TreeObject<vector<reco::Track>>::AddBranch() { if(tree) tree->Branch(nameInTree.c_str(),"vector<reco::Track>",&value,32000,0); }
+
 template<>
 void TreeObject<bool>::SetDefault() { value = false; }
 template<>
@@ -227,6 +232,8 @@ template<>
 void TreeObject<vector<string> >::SetDefault() { value.clear(); }
 template<>
 void TreeObject<vector<TLorentzVector> >::SetDefault() { value.clear(); }
+template<>
+void TreeObject<vector<reco::Track>>::SetDefault() { value.clear(); } 
 
 //derived version of vector<TLorentzVector> for RecoCand
 //with switch for vector<double> pt, eta, phi, energy instead

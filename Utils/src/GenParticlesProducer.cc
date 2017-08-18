@@ -29,6 +29,7 @@ GenParticlesProducer::GenParticlesProducer(const edm::ParameterSet& iConfig):
   produces< std::vector< TLorentzVector > >(""); 
   produces< std::vector< int > >("PdgId");
   produces< std::vector< int > >("Status");
+  produces< std::vector< int > >("LabXYmm");
   produces< std::vector< int > >("Parent");
   produces< std::vector< int > >("ParentId");
   
@@ -55,6 +56,7 @@ GenParticlesProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   auto genParticle_vec = std::make_unique<std::vector<TLorentzVector>>();
   auto PdgId_vec = std::make_unique<std::vector<int>>();
   auto Status_vec = std::make_unique<std::vector<int>>();
+  auto LabXYmm_vec = std::make_unique<std::vector<int>>();
   auto Parent_vec = std::make_unique<std::vector<int>>();
   auto ParentId_vec = std::make_unique<std::vector<int>>();
   auto parents = std::make_unique<std::vector<TLorentzVector>>();
@@ -77,15 +79,34 @@ GenParticlesProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
   for(View<reco::GenParticle>::const_iterator iPart = genPartCands->begin(); iPart != genPartCands->end(); ++iPart)
     {
+      if( debug )std::cout << "==========" << std::endl;
+      if( debug )std::cout<<"no cuts pdgid=" << iPart->pdgId() << " status=" << iPart->status() << std::endl;
+
       bool typicalChild=(typicalChildIds.find(abs(iPart->pdgId()))!=typicalChildIds.end());
       bool typicalParent=(typicalParentIds.find(abs(iPart->pdgId()))!=typicalParentIds.end());
       if (!(typicalChild || typicalParent)) continue;
+      if( debug )
+	{
+	std::cout<<"typical child" << iPart->pdgId() << " status=" << iPart->status() << std::endl;
+	std::cout << "lastcopy=" << iPart->isLastCopy() << std::endl;
+	}
 
       int status = abs(iPart->status());
-      bool acceptableParent = typicalParent && (iPart->isLastCopy() || status==21);
+      bool acceptableParent = typicalParent && (iPart->isLastCopy() || status==21);//1 for chis
       //bool acceptableChild = typicalChild && (status==1 || status==2 || (status>20 && status<30));
       bool acceptableChild = typicalChild && iPart->isLastCopy();
-      if (!(acceptableChild || acceptableParent)) continue;
+      bool acceptableChargino = (abs(iPart->pdgId())==1000024 && status==1);
+      if (!(acceptableChild || acceptableParent || acceptableChargino)) continue;
+
+      if (iPart->numberOfDaughters()>0)
+	{
+	  const reco::Candidate * daughter1 = iPart->daughter(0);
+	  float displacement_cm = sqrt(std::pow(iPart->vx()-daughter1->vx(),2)+std::pow(iPart->vy()-daughter1->vy(),2));
+	  int displacementMM = displacement_cm*10;
+	  LabXYmm_vec->push_back(displacementMM);
+	}
+      else LabXYmm_vec->push_back(0);
+      if( debug )std::cout<<"acceptable particle" << iPart->pdgId() << " status=" << iPart->status() << std::endl;
 
       TLorentzVector temp;
       temp.SetPxPyPzE(iPart->px(), iPart->py(), iPart->pz(), iPart->energy());
@@ -129,14 +150,14 @@ GenParticlesProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       if (itlv == genParticle_vec->end()) parentIndex = -1;
       Parent_vec->push_back(parentIndex);
       if( debug ){
-        std::cout<<g<<"\t"<<PdgId_vec->at(g)<<"\t"<<Status_vec->at(g)<<"\t"<<ParentId_vec->at(g)<<"\t"<<Parent_vec->at(g)<<std::endl;//", eta="<<  parents->at(g).Eta() <<"phi="<< parents->at(g).Phi() <<std::endl;
-        std::cout<< "eta="<< parents->at(g).Eta() << std::endl;
+        std::cout<<g<<"\t"<<PdgId_vec->at(g)<<"\t"<<Status_vec->at(g)<<"\t"<<ParentId_vec->at(g)<<"\t"<<Parent_vec->at(g)<<std::endl;
       }
     }
 
   iEvent.put(std::move(genParticle_vec)); 
   iEvent.put(std::move(PdgId_vec  ), "PdgId" );
   iEvent.put(std::move(Status_vec ), "Status" );
+  iEvent.put(std::move(LabXYmm_vec ), "LabXYmm" );
   iEvent.put(std::move(ParentId_vec ), "ParentId" );
   iEvent.put(std::move(Parent_vec ), "Parent" );
  
@@ -198,3 +219,4 @@ GenParticlesProducer::fillDescriptions(edm::ConfigurationDescriptions& descripti
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(GenParticlesProducer);
+

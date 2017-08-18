@@ -8,6 +8,7 @@ process,
 outfile,
 reportfreq=10,
 dataset="",
+sidecar="",
 globaltag="",
 numevents=1000,
 lostlepton=False,
@@ -27,6 +28,7 @@ doPDFs=False,
 fastsim=False,
 signal=False,
 pmssm=False,
+privateSample=False,
 scenario=""
 ):
 
@@ -52,10 +54,14 @@ scenario=""
     process.maxEvents = cms.untracked.PSet(
         input = cms.untracked.int32(numevents)
     )
+    print 'dataset (for fileNames) = ', dataset
+    print 'sidecar (for seconaryFileNames) = ', sidecar 
     process.source = cms.Source("PoolSource",
         fileNames = cms.untracked.vstring(dataset),
+        secondaryFileNames=cms.untracked.vstring(sidecar),
         inputCommands = cms.untracked.vstring('keep *','drop LHERunInfoProduct_*_*_*'),
     )
+    #exit(0)
     if len(jsonfile)>0: process.source.lumisToProcess = LumiList.LumiList(filename = jsonfile).getVLuminosityBlockRange()
 
     # output file
@@ -67,6 +73,7 @@ scenario=""
     VarsDouble           = cms.vstring()
     VarsInt              = cms.vstring()
     VarsBool             = cms.vstring()
+    VectorTrack          = cms.vstring()
     VectorTLorentzVector = cms.vstring()
     VectorDouble         = cms.vstring()
     VectorString         = cms.vstring()
@@ -81,6 +88,7 @@ scenario=""
         VarsDouble           = VarsDouble,
         VarsInt              = VarsInt,
         VarsBool             = VarsBool,
+        VectorTrack          = VectorTrack,        
         VectorTLorentzVector = VectorTLorentzVector,
         VectorDouble         = VectorDouble,
         VectorInt            = VectorInt,
@@ -97,6 +105,48 @@ scenario=""
     ## ----------------------------------------------------------------------------------------------
     ## SUSY scan info
     ## ----------------------------------------------------------------------------------------------
+
+    if sidecar:
+            from TreeMaker.Utils.disappearingtrackproducer_cfi import disappearingTracks
+            process.DisappearingTracks = disappearingTracks.clone(
+                doDeDx = cms.bool(not fastsim),
+                    )
+            VectorTLorentzVector.extend(['DisappearingTracks:chiCands(chiCands)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@dxyVtx(chiCands_dxyVtx)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@dzVtx(chiCands_dzVtx)'])
+            VectorInt.extend(['DisappearingTracks:chiCands@pixelLayersWithMeasurement(chiCands_pixelLayersWithMeasurement)'])
+            VectorInt.extend(['DisappearingTracks:chiCands@trackerLayersWithMeasurement(chiCands_trackerLayersWithMeasurement)'])
+            VectorInt.extend(['DisappearingTracks:chiCands@nMissingOuterHits(chiCands_nMissingOuterHits)'])
+            VectorInt.extend(['DisappearingTracks:chiCands@nMissingInnerHits(chiCands_nMissingInnerHits)'])
+            VectorInt.extend(['DisappearingTracks:chiCands@nMissingMiddleHits(chiCands_nMissingMiddleHits)']) 
+            VectorInt.extend(['DisappearingTracks:chiCands@nValidPixelHits(chiCands_nValidPixelHits)']) 
+            VectorInt.extend(['DisappearingTracks:chiCands@nValidTrackerHits(chiCands_nValidTrackerHits)']) 
+            VectorDouble.extend(['DisappearingTracks:chiCands@chi2perNdof(chiCands_chi2perNdof)'])          
+            VectorDouble.extend(['DisappearingTracks:chiCands@trkRelIso(chiCands_trkRelIso)'])   
+            VectorDouble.extend(['DisappearingTracks:chiCands@trkMiniRelIso(chiCands_trkMiniRelIso)'])          
+            VectorDouble.extend(['DisappearingTracks:chiCands@trackJetIso(chiCands_trackJetIso)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@trackLeptonIso(chiCands_trackLeptonIso)'])                    
+            VectorDouble.extend(['DisappearingTracks:chiCands@matchedCaloEnergy(chiCands_matchedCaloEnergy)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@chargedPtSum(chiCands_chargedPtSum)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@neutralPtSum(chiCands_neutralPtSum)'])
+            VectorDouble.extend(['DisappearingTracks:chiCands@neutralWithoutGammaPtSum(chiCands_neutralWithoutGammaPtSum)'])
+            if not fastsim: 
+                VectorDouble.extend(['DisappearingTracks:chiCands@deDxHarmonic2(chiCands_deDxHarmonic2)']) 
+            VectorBool.extend(['DisappearingTracks:chiCands@passExo16044Tag(chiCands_passExo16044Tag)']) 
+            VectorBool.extend(['DisappearingTracks:chiCands@passExo16044JetIso(chiCands_passExo16044JetIso)']) 
+            VectorBool.extend(['DisappearingTracks:chiCands@passExo16044LepIso(chiCands_passExo16044LepIso)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityUndef(chiCands_trackQualityUndef)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityLoose(chiCands_trackQualityLoose)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityTight(chiCands_trackQualityTight)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityHighPurity(chiCands_trackQualityHighPurity)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityConfirmed(chiCands_trackQualityConfirmed)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityGoodIterative(chiCands_trackQualityGoodIterative)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityLooseSetWithPV(chiCands_trackQualityLooseSetWithPV)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityHighPuritySetWithPV(chiCands_trackQualityHighPuritySetWithPV)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualityDiscarded(chiCands_trackQualityDiscarded)'])        
+            VectorBool.extend(['DisappearingTracks:chiCands@trackQualitySize(chiCands_trackQualitySize)'])        
+            
+    
     if geninfo:
         # mother and LSP masses for SUSY signal scans
         # branches always added, but only have values for fastsim samples
@@ -177,8 +227,21 @@ scenario=""
         VectorTLorentzVector.append("genParticles(GenParticles)")
         VectorInt.append("genParticles:PdgId(GenParticles_PdgId)")
         VectorInt.append("genParticles:Status(GenParticles_Status)")
+        VectorInt.append("genParticles:LabXYmm(GenParticles_LabXYmm)")
         VectorInt.append("genParticles:Parent(GenParticles_ParentIdx)")
         VectorInt.append("genParticles:ParentId(GenParticles_ParentId)")
+
+        if privateSample:
+            process.genParticles2 = cms.EDProducer("GenParticlesProducer",
+                                                   genCollection = cms.untracked.InputTag("genParticlePlusGeant"),
+                                                   debug = cms.untracked.bool(False)
+            )
+            VectorTLorentzVector.append("genParticles2(GenParticlesGeant)")
+            VectorInt.append("genParticles2:PdgId(GenParticlesGeant_PdgId)")
+            VectorInt.append("genParticles2:Status(GenParticlesGeant_Status)")
+            VectorInt.append("genParticles2:LabXYmm(GenParticlesGeant_LabXYmm)")
+            VectorInt.append("genParticles2:Parent(GenParticlesGeant_ParentIdx)")
+            VectorInt.append("genParticles2:ParentId(GenParticlesGeant_ParentId)")        
         
         # for ttbar pT reweighting
         # params from: https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting#Run_2_strategy
@@ -447,6 +510,7 @@ scenario=""
             filterName  = cms.string("Flag_EcalDeadCellTriggerPrimitiveFilter"),
         )
         VarsInt.extend(['EcalDeadCellTriggerPrimitiveFilter'])
+
         process.eeBadScFilter = filterDecisionProducer.clone(
             trigTagArg1  = cms.string('TriggerResults'),
             trigTagArg2  = cms.string(''),
@@ -454,6 +518,7 @@ scenario=""
             filterName  =   cms.string("Flag_eeBadScFilter"),
         )
         VarsInt.extend(['eeBadScFilter'])
+
         # some filters need to be rerun
         process.load('RecoMET.METFilters.BadChargedCandidateFilter_cfi')
         process.BadChargedCandidateFilter.muons = cms.InputTag("slimmedMuons")
@@ -548,6 +613,7 @@ scenario=""
     from TreeMaker.TreeMaker.makeJetVars import makeJetVars
     
     if geninfo:
+        '''
         # JEC unc up
         process, JetTagJECup = JetDepot(process,
             JetTag=JetTag,
@@ -619,7 +685,7 @@ scenario=""
                               scenario=scenario,
                               SkipTag=SkipTag
         )
-
+        '''
         # finally, do central smearing and replace jet tag
         process, JetTag = JetDepot(process,
             JetTag=JetTag,
@@ -670,7 +736,7 @@ scenario=""
                           JetTag=JetTag,
                           suff='',
                           skipGoodJets=False,
-                          storeProperties=2,
+                          storeProperties=1,
                           geninfo=geninfo,
                           fastsim=fastsim,
                           scenario=scenario,

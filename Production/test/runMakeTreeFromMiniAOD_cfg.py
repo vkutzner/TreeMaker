@@ -1,4 +1,14 @@
 import sys
+import os
+
+print 'sys.argv', sys.argv
+
+# fix DAS client SSL bug:
+os.environ['SSL_CERT_DIR'] = '/etc/pki/tls/certs:/etc/grid-security/certificates'       
+
+# if using grid-control, set correct path
+if os.environ.get("GC_SCRATCH","not_set") != "not_set":
+    os.chdir("%s/src/TreeMaker/Production/test/" % os.environ['CMSSW_BASE'])
 
 # Read parameters
 from TreeMaker.Utils.CommandLineParams import CommandLineParams
@@ -6,6 +16,27 @@ parameters = CommandLineParams()
 scenarioName=parameters.value("scenario","")
 inputFilesConfig=parameters.value("inputFilesConfig","")
 dataset=parameters.value("dataset",[])
+privateSample=parameters.value("privateSample",False)
+if dataset==[]: sidecar = []
+elif privateSample:
+    print 'doing private sample thing'
+    sidecar = []
+    for d in dataset.split(','):
+        sidecar.append(d.replace('step3','step2').replace('miniAOD','AOD').replace('miniaod','aod'))
+        print 'grew sidecar', sidecar[-1]
+else:
+    sidecar = []
+    for d in dataset.split(','):
+        tmpfilename = 'tmp.txt'
+        os.system('./data/das_client.py --query="parent file='+d+'" --limit=0 > '+tmpfilename)
+        ftmp = open(tmpfilename)
+        lines = ftmp.readlines()
+        ftmp.close()
+        os.system('rm '+tmpfilename)
+        for line in lines: sidecar.append(line.strip())
+print 'dataset initially=', dataset
+print 'sidecar initially', sidecar
+
 nstart = parameters.value("nstart",0)
 nfiles = parameters.value("nfiles",-1)
 numevents=parameters.value("numevents",-1)
@@ -15,13 +46,13 @@ dump=parameters.value("dump",False)
 mp=parameters.value("mp",False)
 
 # background estimations on by default
-lostlepton=parameters.value("lostlepton", True)
-hadtau=parameters.value("hadtau", True)
+lostlepton=parameters.value("lostlepton", False)
+hadtau=parameters.value("hadtau", False)
 hadtaurecluster=parameters.value("hadtaurecluster", 1)
-doZinv=parameters.value("doZinv", True)
+doZinv=parameters.value("doZinv", False)
 
 # compute the PDF weights
-doPDFs=parameters.value("doPDFs", True);
+doPDFs=parameters.value("doPDFs", False);
 
 # other options off by default
 debugtracks=parameters.value("debugtracks", False)
@@ -37,6 +68,7 @@ globaltag=parameters.value("globaltag",scenario.globaltag)
 tagname=parameters.value("tagname",scenario.tagname)
 geninfo=parameters.value("geninfo",scenario.geninfo)
 pmssm=parameters.value("pmssm",scenario.pmssm)
+privateSample=parameters.value("privateSample", privateSample)
 fastsim=parameters.value("fastsim",scenario.fastsim)
 signal=parameters.value("signal",scenario.signal)
 jsonfile=parameters.value("jsonfile",scenario.jsonfile)
@@ -49,6 +81,7 @@ era=parameters.value("era",scenario.era)
 #temporary redirector fix
 #fastsim signal is phedexed to LPC Tier3
 redir=parameters.value("redir", "root://cmseos.fnal.gov/" if fastsim and signal else "root://cmsxrootd.fnal.gov/")
+redir = parameters.value("redir","root://cmsxrootd.fnal.gov/")
 
 # The process needs to be defined AFTER reading sys.argv,
 # otherwise edmConfigHash fails
@@ -64,6 +97,7 @@ process.load("Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cf
 
 # Load input files
 readFiles = cms.untracked.vstring()
+readFiles_sidecar = cms.untracked.vstring()
 
 if inputFilesConfig!="" :
     if nfiles==-1:
@@ -72,17 +106,34 @@ if inputFilesConfig!="" :
     else:
         readFilesImport = getattr(__import__("TreeMaker.Production."+inputFilesConfig+"_cff",fromlist=["readFiles"]),"readFiles")
         readFiles.extend( readFilesImport[nstart:(nstart+nfiles)] )
+    for rf in readFiles:
+        tmpfilename = 'tmp.txt'
+        os.system('./data/das_client.py --query="parent file='+rf+'" --limit=0 > '+tmpfilename)
+        ftmp = open(tmpfilename)
+        lines = ftmp.readlines()
+        ftmp.close()
+        os.system('rm '+tmpfilename)
+        for line in lines: readFiles_sidecar.append(line.strip())
+    print 'readFiles, readFiles_sidecar', readFiles, readFiles_sidecar
 
 if dataset!=[] :    
     readFiles.extend( [dataset] )
 
+if sidecar!=[] :
+    readFiles_sidecar.extend( sidecar )
+    
 for f,val in enumerate(readFiles):
     if readFiles[f][0:6]=="/store":
         readFiles[f] = redir+readFiles[f]
     
+for f,val in enumerate(readFiles_sidecar):
+    if readFiles_sidecar[f][0:6]=="/store":
+        readFiles_sidecar[f] = redir+readFiles_sidecar[f]        
+
 # print out settings
 print "***** SETUP ************************************"
 print " dataset: "+str(readFiles)
+print " sidecar: "+str(readFiles_sidecar)
 print " outfile: "+outfile+"_RA2AnalysisTree"
 print " "
 print " storing lostlepton variables: "+str(lostlepton)
@@ -113,6 +164,7 @@ process = makeTreeFromMiniAOD(process,
     outfile=outfile+"_RA2AnalysisTree",
     reportfreq=reportfreq,
     dataset=readFiles,
+    sidecar=readFiles_sidecar,
     globaltag=globaltag,
     numevents=numevents,
     hadtau=hadtau,
