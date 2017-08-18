@@ -138,7 +138,6 @@ for item in completePaths:
     fout.write(jdlFile)
     fout.close()
 
-    break
 
 # write out shell script
 fout = open("jobExecCondorSingle.sh", "w")
