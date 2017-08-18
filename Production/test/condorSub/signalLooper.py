@@ -1,6 +1,7 @@
 #!/bin/env python
 import os
 from subprocess import check_output
+import glob
 
 ################## configure here ##################
 folderAOD = "root://cmsxrootd.fnal.gov//store/user/lpcsusyhad/sbein/LongLiveTheChi/aodsim/smallchunks"
@@ -145,5 +146,7 @@ fout.write(shellscript)
 fout.close()
 os.system("chmod +x jobExecCondorSingle.sh")
 
-print "Ready! Submit jobs with"
-print "condor_submit pMSSM12_MCMC1*"
+raw_input("Ready to submit jobs, press <return>")
+
+for jdlFile in glob.glob("jobExecCondor_pMSSM12*jdl"):
+    os.system("condor_submit %s" % jdlFile)
