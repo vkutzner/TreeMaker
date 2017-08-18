@@ -2,14 +2,18 @@
 import os
 from subprocess import check_output
 
+################## configure here ##################
+folderAOD = "root://cmsxrootd.fnal.gov//store/user/lpcsusyhad/sbein/LongLiveTheChi/aodsim/smallchunks"
+outputFolder = "srm://dcache-se-cms.desy.de/pnfs/desy.de/cms/tier2/store/user/vkutzner/DisappTrksNtupleSidecar"
+scenario = "Spring16Pmssm"
+################## configure here ##################
+
 filelistFile = open("filelistBM.txt",'r')
 filelist = filelistFile.read().split()
 
-folderAOD = "root://cmsxrootd.fnal.gov//store/user/lpcsusyhad/sbein/LongLiveTheChi/aodsim/smallchunks"
-folderMiniAOD = folderAOD.replace("aodsim", "miniaodsim")
-
 completePaths = []
 for fileMiniAOD in filelist:
+    folderMiniAOD = folderAOD.replace("aodsim", "miniaodsim")
     completeMiniAODPath = folderMiniAOD  + "/" + fileMiniAOD
     fileAOD = fileMiniAOD.replace("step3_miniAODSIM", "step2_AODSIM")
     completeAODPath = folderAOD  + "/" + fileAOD
@@ -116,11 +120,11 @@ done
 
 jdlTemplate = jdlTemplate.replace("$ENV(X509_USER_PROXY)", check_output(["sh", "-c", "voms-proxy-info | grep path | cut -b 13-"]))
 jdlTemplate = jdlTemplate.replace("CMSSWVER", os.environ['CMSSW_BASE'].split("/")[-1])
-jdlTemplate = jdlTemplate.replace("OUTDIR", "srm://dcache-se-cms.desy.de/pnfs/desy.de/cms/tier2/store/user/vkutzner/DisappTrksNtupleSidecar")
+jdlTemplate = jdlTemplate.replace("OUTDIR", outputFolder)
 jdlTemplate = jdlTemplate.replace("NPART", "0")
 jdlTemplate = jdlTemplate.replace("NSTART", "0")
 jdlTemplate = jdlTemplate.replace("NFILES", "1")
-jdlTemplate = jdlTemplate.replace("SCENARIO", "Summer16Sig")
+jdlTemplate = jdlTemplate.replace("SCENARIO", scenario)
 jdlTemplate = jdlTemplate.replace("EXTRASTUFF", "")
 
 
@@ -144,4 +148,5 @@ fout.write(shellscript)
 fout.close()
 os.system("chmod +x jobExecCondorSingle.sh")
 
-print "Ready to submit!"
+print "Ready! Submit jobs with"
+print "condor_submit pMSSM12_MCMC1*"
