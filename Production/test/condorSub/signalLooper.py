@@ -33,7 +33,7 @@ Error = JOBNAME_$(Cluster).stderr
 Log = JOBNAME_$(Cluster).condor
 notification = Never
 x509userproxy = $ENV(X509_USER_PROXY)
-Arguments = CMSSWVER OUTDIR SAMPLE NPART NSTART NFILES SCENARIO
+Arguments = CMSSWVER OUTDIR SAMPLE NPART NSTART NFILES SCENARIO JOBNAME
 want_graceful_removal = true
 EXTRASTUFF
 on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
@@ -67,7 +67,7 @@ NPART=$4
 NSTART=$5
 NFILES=$6
 SCENARIO=$7
-REDIR=$8
+JOBNAME=$8
 
 echo ""
 echo "parameter set:"
@@ -78,7 +78,7 @@ echo "NPART:      $NPART"
 echo "NSTART:     $NSTART"
 echo "NFILES:     $NFILES"
 echo "SCENARIO:   $SCENARIO"
-echo "REDIR:      $REDIR"
+echo "JOBNAME:    $JOBNAME"
 
 tar -xzf ${CMSSWVER}.tar.gz
 cd ${CMSSWVER}
@@ -88,10 +88,7 @@ eval `scramv1 runtime -sh`
 cd -
 
 # run CMSSW
-ARGS="outfile=${SAMPLE}_${NPART} dataset=${SAMPLE} scenario=${SCENARIO}"
-if [[ -n "$REDIR" ]]; then
- ARGS="$ARGS redir=${REDIR}"
-fi
+ARGS="outfile=${JOBNAME} dataset=${SAMPLE} scenario=${SCENARIO}"
 cmsRun runMakeTreeFromMiniAOD_cfg.py ${ARGS} privateSample=True 2>&1
 
 CMSEXIT=$?
@@ -141,6 +138,7 @@ for item in completePaths:
     fout.write(jdlFile)
     fout.close()
 
+    break
 
 # write out shell script
 fout = open("jobExecCondorSingle.sh", "w")
