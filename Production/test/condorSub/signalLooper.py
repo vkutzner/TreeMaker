@@ -96,20 +96,21 @@ CMSEXIT=$?
 
 if [[ $CMSEXIT -ne 0 ]]; then
   rm *.root
-  echo "exit code $CMSEXIT, skipping xrdcp"
+  echo "exit code $CMSEXIT, skipping gfal-copy"
   exit $CMSEXIT
 fi
 
 # copy output to eos
-echo "xrdcp output for condor"
-for FILE in *.root
+echo "gfal-copy output for condor"
+. /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.3/current/el6-x86_64/setup.sh
+for FILE in *RA2AnalysisTree.root
 do
-  echo "gfal-copy ${FILE} ${OUTDIR}/${FILE}"
-  gfal-copy ${FILE} ${OUTDIR}/${FILE} 2>&1
+  echo "gfal-copy -f ${FILE} ${OUTDIR}/${FILE}"
+  gfal-copy -f ${FILE} ${OUTDIR}/${FILE} 2>&1
   XRDEXIT=$?
   if [[ $XRDEXIT -ne 0 ]]; then
     rm *.root
-    echo "exit code $XRDEXIT, failure in xrdcp"
+    echo "exit code $XRDEXIT, failure in gfal-copy"
     exit $XRDEXIT
   fi
   rm ${FILE}
