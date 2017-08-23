@@ -1,5 +1,6 @@
 import sys
 import os
+from subprocess import check_output
 
 print 'sys.argv', sys.argv
 
@@ -10,6 +11,21 @@ os.environ['SSL_CERT_DIR'] = '/etc/pki/tls/certs:/etc/grid-security/certificates
 if os.environ.get("GC_SCRATCH","not_set") != "not_set":
     os.chdir("%s/src/TreeMaker/Production/test/" % os.environ['CMSSW_BASE'])
 
+
+def getAODforDataSamples(datasetPathMiniAOD):
+
+    parentfiles = check_output(["./data/das_client.py", '--query=parent file=%s' % datasetPathMiniAOD, '--limit=0']).split()
+    aodFiles = []
+
+    for parentfile in parentfiles:
+        childFiles = check_output(["./data/das_client.py", '--query=child file=%s' % parentfile, '--limit=0']).split()
+        for childFile in childFiles:
+            if "/AOD/" in childFile:
+                aodFiles.append(childFile)
+
+    return aodFiles
+
+
 # Read parameters
 from TreeMaker.Utils.CommandLineParams import CommandLineParams
 parameters = CommandLineParams()
@@ -17,15 +33,26 @@ scenarioName=parameters.value("scenario","")
 inputFilesConfig=parameters.value("inputFilesConfig","")
 dataset=parameters.value("dataset",[])
 privateSample=parameters.value("privateSample",False)
-if dataset==[]: sidecar = []
+
+isData = False
+for item in dataset.split():
+    print item
+    if "data" in item:
+        isData = True
+        print "Processing data sample..."
+
+sidecar = []
+
+if isData:
+    for item in dataset.split():
+        sidecar += getAODforDataSamples(item)
+
 elif privateSample:
     print 'doing private sample thing'
-    sidecar = []
     for d in dataset.split(','):
         sidecar.append(d.replace('step3','step2').replace('miniAOD','AOD').replace('miniaod','aod'))
         print 'grew sidecar', sidecar[-1]
 else:
-    sidecar = []
     for d in dataset.split(','):
         tmpfilename = 'tmp.txt'
         os.system('./data/das_client.py --query="parent file='+d+'" --limit=0 > '+tmpfilename)

@@ -103,7 +103,7 @@ def check_glidein():
     if  glidein:
         msg = "ERROR: das_client is running from GLIDEIN environment, it is prohibited"
         print(msg)
-        sys.exit(EX__BASE)
+        #sys.exit(EX__BASE)
 
 def check_auth(key):
     "Check if user runs das_client with key/cert and warn users to switch"
@@ -452,7 +452,7 @@ def main():
     capath  = opts.capath
     base    = opts.base
     qcache  = opts.qcache
-    check_glidein()
+    #check_glidein()
     check_auth(ckey)
     if  opts.keys_attrs:
         keys_attrs(opts.keys_attrs, opts.format, host, ckey, cert, debug)
