@@ -2,17 +2,14 @@ import sys
 import os
 from subprocess import check_output
 
-print 'sys.argv', sys.argv
+print "running with args:", sys.argv
 
-# fix DAS client SSL bug:
-os.environ['SSL_CERT_DIR'] = '/etc/pki/tls/certs:/etc/grid-security/certificates'       
+def getAODfromMiniAODPath(datasetPathMiniAOD):
 
-# if using grid-control, set correct path
-if os.environ.get("GC_SCRATCH","not_set") != "not_set":
-    os.chdir("%s/src/TreeMaker/Production/test/" % os.environ['CMSSW_BASE'])
+    # get AOD file(s) from MiniAOD file path
 
-
-def getAODforDataSamples(datasetPathMiniAOD):
+    # fix SSL site configuration for DAS client:
+    os.environ['SSL_CERT_DIR'] = '/etc/pki/tls/certs:/etc/grid-security/certificates'
 
     parentfiles = check_output(["./data/das_client.py", '--query=parent file=%s' % datasetPathMiniAOD, '--limit=0']).split()
     aodFiles = []
@@ -23,7 +20,8 @@ def getAODforDataSamples(datasetPathMiniAOD):
             if "/AOD/" in childFile:
                 aodFiles.append(childFile)
 
-    return aodFiles
+    # avoid duplicate entries:
+    return list(set(aodFiles))
 
 
 # Read parameters
@@ -33,34 +31,17 @@ scenarioName=parameters.value("scenario","")
 inputFilesConfig=parameters.value("inputFilesConfig","")
 dataset=parameters.value("dataset",[])
 privateSample=parameters.value("privateSample",False)
-
-isData = False
-for item in dataset.split():
-    print item
-    if "data" in item:
-        isData = True
-        print "Processing data sample..."
-
-sidecar = []
-
-if isData:
-    for item in dataset.split():
-        sidecar += getAODforDataSamples(item)
-
+if dataset==[]: sidecar = []
 elif privateSample:
     print 'doing private sample thing'
+    sidecar = []
     for d in dataset.split(','):
         sidecar.append(d.replace('step3','step2').replace('miniAOD','AOD').replace('miniaod','aod'))
         print 'grew sidecar', sidecar[-1]
 else:
+    sidecar = []
     for d in dataset.split(','):
-        tmpfilename = 'tmp.txt'
-        os.system('./data/das_client.py --query="parent file='+d+'" --limit=0 > '+tmpfilename)
-        ftmp = open(tmpfilename)
-        lines = ftmp.readlines()
-        ftmp.close()
-        os.system('rm '+tmpfilename)
-        for line in lines: sidecar.append(line.strip())
+        sidecar += getAODfromMiniAODPath(d)
 print 'dataset initially=', dataset
 print 'sidecar initially', sidecar
 
@@ -134,13 +115,7 @@ if inputFilesConfig!="" :
         readFilesImport = getattr(__import__("TreeMaker.Production."+inputFilesConfig+"_cff",fromlist=["readFiles"]),"readFiles")
         readFiles.extend( readFilesImport[nstart:(nstart+nfiles)] )
     for rf in readFiles:
-        tmpfilename = 'tmp.txt'
-        os.system('./data/das_client.py --query="parent file='+rf+'" --limit=0 > '+tmpfilename)
-        ftmp = open(tmpfilename)
-        lines = ftmp.readlines()
-        ftmp.close()
-        os.system('rm '+tmpfilename)
-        for line in lines: readFiles_sidecar.append(line.strip())
+        readFiles_sidecar += getAODfromMiniAODPath(rf)
     print 'readFiles, readFiles_sidecar', readFiles, readFiles_sidecar
 
 if dataset!=[] :    
@@ -156,6 +131,7 @@ for f,val in enumerate(readFiles):
 for f,val in enumerate(readFiles_sidecar):
     if readFiles_sidecar[f][0:6]=="/store":
         readFiles_sidecar[f] = redir+readFiles_sidecar[f]        
+
 
 # print out settings
 print "***** SETUP ************************************"
