@@ -1,15 +1,33 @@
-#/uscms_data/d3/sbein/LongLiveTheChi/20May2017/NtupleMakerSideCar/CMSSW_8_0_28/src/TreeMaker
 import sys
 import os
+from subprocess import check_output
 
-print 'sys.argv', sys.argv
+print "running with args:", sys.argv
 
-# fix DAS client SSL bug:
-os.environ['SSL_CERT_DIR'] = '/etc/pki/tls/certs:/etc/grid-security/certificates'       
+def getAODfromMiniAODPath(datasetPathMiniAOD):
 
-# if using grid-control, set correct path
-if os.environ.get("GC_SCRATCH","not_set") != "not_set":
-    os.chdir("%s/src/TreeMaker/Production/test/" % os.environ['CMSSW_BASE'])
+    # get AOD file(s) from MiniAOD file path
+
+    # fix SSL site configuration for DAS client:
+    os.environ['SSL_CERT_DIR'] = '/etc/pki/tls/certs:/etc/grid-security/certificates'
+
+    parentfiles = check_output(["./data/das_client.py", '--query=parent file=%s' % datasetPathMiniAOD, '--limit=0']).split()
+    aodFiles = []
+
+    for parentfile in parentfiles:
+        if "/AOD" in parentfile:
+            # parent file is already AOD file
+            aodFiles.append(parentfile)
+        else:
+            # parent file is e.g. RAW, so check its children:
+            childFiles = check_output(["./data/das_client.py", '--query=child file=%s' % parentfile, '--limit=0']).split()
+            for childFile in childFiles:
+                if "/AOD" in childFile:
+                    aodFiles.append(childFile)
+
+    # avoid duplicate entries:
+    return list(set(aodFiles))
+
 
 # Read parameters
 from TreeMaker.Utils.CommandLineParams import CommandLineParams
@@ -28,13 +46,7 @@ elif privateSample:
 else:
     sidecar = []
     for d in dataset.split(','):
-        tmpfilename = 'tmp.txt'
-        os.system('./data/das_client.py --query="parent file='+d+'" --limit=0 > '+tmpfilename)
-        ftmp = open(tmpfilename)
-        lines = ftmp.readlines()
-        ftmp.close()
-        os.system('rm '+tmpfilename)
-        for line in lines: sidecar.append(line.strip())
+        sidecar += getAODfromMiniAODPath(d)
 print 'dataset initially=', dataset
 print 'sidecar initially', sidecar
 
@@ -112,13 +124,7 @@ if inputFilesConfig!="" :
         readFilesImport = getattr(__import__("TreeMaker.Production."+inputFilesConfig+"_cff",fromlist=["readFiles"]),"readFiles")
         readFiles.extend( readFilesImport[nstart:(nstart+nfiles)] )
     for rf in readFiles:
-        tmpfilename = 'tmp.txt'
-        os.system('./data/das_client.py --query="parent file='+rf+'" --limit=0 > '+tmpfilename)
-        ftmp = open(tmpfilename)
-        lines = ftmp.readlines()
-        ftmp.close()
-        os.system('rm '+tmpfilename)
-        for line in lines: readFiles_sidecar.append(line.strip())
+        readFiles_sidecar += getAODfromMiniAODPath(rf)
     print 'readFiles, readFiles_sidecar', readFiles, readFiles_sidecar
 
 if dataset!=[] :  
