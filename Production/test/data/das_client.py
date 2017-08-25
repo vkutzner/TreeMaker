@@ -452,7 +452,7 @@ def main():
     capath  = opts.capath
     base    = opts.base
     qcache  = opts.qcache
-    check_glidein()
+    #check_glidein()
     check_auth(ckey)
     if  opts.keys_attrs:
         keys_attrs(opts.keys_attrs, opts.format, host, ckey, cert, debug)

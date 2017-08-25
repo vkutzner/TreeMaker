@@ -57,7 +57,9 @@ fi
 
 # copy output to eos
 echo "gfal-copy output for condor"
-. /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.3/current/el6-x86_64/setup.sh
+if [ -e "/cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.3/current/el6-x86_64/setup.sh" ]; then
+    . /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.3/current/el6-x86_64/setup.sh
+fi
 for FILE in *RA2AnalysisTree.root
 do
   echo "gfal-copy -f ${FILE} ${OUTDIR}/${FILE}"

@@ -1,26 +1,45 @@
 import sys
 import os
 from subprocess import check_output
+import subprocess
 
 print "running with args:", sys.argv
 
 def getAODfromMiniAODPath(datasetPathMiniAOD):
+
+    print "getAODfromMiniAODPath" , datasetPathMiniAOD
 
     # get AOD file(s) from MiniAOD file path
 
     # fix SSL site configuration for DAS client:
     os.environ['SSL_CERT_DIR'] = '/etc/pki/tls/certs:/etc/grid-security/certificates'
 
-    parentfiles = check_output(["./data/das_client.py", '--query=parent file=%s' % datasetPathMiniAOD, '--limit=0']).split()
-    aodFiles = []
+    #parentfiles = check_output(["./data/das_client.py", '--query=parent file=%s' % datasetPathMiniAOD, '--limit=0']) .split()
+    parentfiles = []
+    os.system('./data/das_client.py --query="parent file='+datasetPathMiniAOD+'" --limit=0 > '+'tmp.txt')
+    ftmp = open('tmp.txt')
+    lines = ftmp.readlines()
+    ftmp.close()
+    os.system('rm tmp.txt')
+    for line in lines: parentfiles.append(line.strip())
 
+    aodFiles = []
     for parentfile in parentfiles:
         if "/AOD" in parentfile:
             # parent file is already AOD file
             aodFiles.append(parentfile)
         else:
             # parent file is e.g. RAW, so check its children:
-            childFiles = check_output(["./data/das_client.py", '--query=child file=%s' % parentfile, '--limit=0']).split()
+
+            # childFiles = check_output(["./data/das_client.py", "--query=child file=%s" % parentfile, '--limit=0']).split()
+            childFiles = []
+            os.system('./data/das_client.py --query="child file='+parentfile+'" --limit=0 > '+'tmp.txt')
+            ftmp = open('tmp.txt')
+            lines = ftmp.readlines()
+            ftmp.close()
+            os.system('rm tmp.txt')
+            for line in lines: childFiles.append(line.strip())
+
             for childFile in childFiles:
                 if "/AOD" in childFile:
                     aodFiles.append(childFile)
@@ -169,14 +188,6 @@ if len(jerfile)>0: print " JERs applied: "+jerfile
 if len(pufile)>0: print " PU weights stored: "+pufile
 print " era of this dataset: "+era
 print "************************************************"
-
-# grid-control overwrites the secondary (sidecar) files. Store filenames
-# in temporary file for retrieval by grid-control:
-if os.environ.get("GC_SCRATCH","not_set") != "not_set":
-    fout = open('%s/sidecarfiles' % os.environ['CMSSW_BASE'], 'w+')
-    sidecarContent = str(readFiles_sidecar).split("cms.untracked.vstring(")[-1].split(")")[0]
-    fout.write(sidecarContent)
-    fout.close()
 
 from TreeMaker.TreeMaker.makeTreeFromMiniAOD_cff import makeTreeFromMiniAOD
 process = makeTreeFromMiniAOD(process,
