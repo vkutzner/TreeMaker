@@ -15,10 +15,15 @@ def getAODfromMiniAODPath(datasetPathMiniAOD):
     aodFiles = []
 
     for parentfile in parentfiles:
-        childFiles = check_output(["./data/das_client.py", '--query=child file=%s' % parentfile, '--limit=0']).split()
-        for childFile in childFiles:
-            if "/AOD/" in childFile:
-                aodFiles.append(childFile)
+        if "/AOD" in parentfile:
+            # parent file is already AOD file
+            aodFiles.append(parentfile)
+        else:
+            # parent file is e.g. RAW, so check its children:
+            childFiles = check_output(["./data/das_client.py", '--query=child file=%s' % parentfile, '--limit=0']).split()
+            for childFile in childFiles:
+                if "/AOD" in childFile:
+                    aodFiles.append(childFile)
 
     # avoid duplicate entries:
     return list(set(aodFiles))
