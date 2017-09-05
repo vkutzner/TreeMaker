@@ -186,6 +186,10 @@ if len(pufile)>0: print " PU weights stored: "+pufile
 print " era of this dataset: "+era
 print "************************************************"
 
+if len(readFiles_sidecar) == 0:
+    print "No sidecar files!"
+    quit()
+
 from TreeMaker.TreeMaker.makeTreeFromMiniAOD_cff import makeTreeFromMiniAOD
 process = makeTreeFromMiniAOD(process,
     outfile=outfile+"_RA2AnalysisTree",
