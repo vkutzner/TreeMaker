@@ -10,7 +10,7 @@ Output = JOBNAME_$(Cluster).stdout
 Error = JOBNAME_$(Cluster).stderr
 Log = JOBNAME_$(Cluster).condor
 notification = Never
-x509userproxy = $ENV(X509_USER_PROXY)
+x509userproxy = /tmp/x509up_u100077
 Arguments = CMSSWVER OUTDIR SAMPLE NPART NSTART NFILES SCENARIO
 want_graceful_removal = true
 EXTRASTUFF

@@ -2,23 +2,29 @@
 import os
 from subprocess import check_output
 import glob
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("--length", dest="length", default=None)
+(options, args) = parser.parse_args()
 
 ################## configure here ##################
-folderAOD = "root://cmsxrootd.fnal.gov//store/user/lpcsusyhad/sbein/LongLiveTheChi/aodsim/smallchunks"
-outputFolder = "srm://dcache-se-cms.desy.de/pnfs/desy.de/cms/tier2/store/user/vkutzner/DisappTrksNtupleSidecarN1"
-scenario = "Spring16Pmssm"
+folderAOD = "srm://dcache-se-cms.desy.de/pnfs/desy.de/cms/tier2/store/user/aksingh/AOD"
+outputFolder = "srm://dcache-se-cms.desy.de/pnfs/desy.de/cms/tier2/store/user/vkutzner/DisappTrksAkshansh-N1-more"
+scenario = "Summer16sig"
+filelistFile = open("filelistAkshansh-more.txt", 'r')
 ################## configure here ##################
 
-filelistFile = open("filelistBM.txt",'r')
 filelist = filelistFile.read().split()
 
 completePaths = []
 for fileMiniAOD in filelist:
-    folderMiniAOD = folderAOD.replace("aodsim", "miniaodsim")
+    folderMiniAOD = folderAOD.replace("AOD", "miniAOD")
     completeMiniAODPath = folderMiniAOD  + "/" + fileMiniAOD
-    fileAOD = fileMiniAOD.replace("step3_miniAODSIM", "step2_AODSIM")
+    fileAOD = fileMiniAOD.replace("step4", "step3").replace("miniAODSIM", "AODSIM")
     completeAODPath = folderAOD  + "/" + fileAOD
     completePaths.append([completeAODPath, completeMiniAODPath])
+
   
 jdlTemplate = '''
 universe = vanilla
@@ -34,7 +40,7 @@ Error = JOBNAME_$(Cluster).stderr
 Log = JOBNAME_$(Cluster).condor
 notification = Never
 x509userproxy = $ENV(X509_USER_PROXY)
-Arguments = CMSSWVER OUTDIR SAMPLE NPART NSTART NFILES SCENARIO JOBNAME
+Arguments = CMSSWVER OUTDIR SAMPLE NPART NSTART NFILES SCENARIO JOBNAME AODFILE
 want_graceful_removal = true
 EXTRASTUFF
 on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
@@ -69,6 +75,7 @@ NSTART=$5
 NFILES=$6
 SCENARIO=$7
 JOBNAME=$8
+AODFILE=$9
 
 echo ""
 echo "parameter set:"
@@ -88,8 +95,15 @@ scram b ProjectRename
 eval `scramv1 runtime -sh`
 cd -
 
+if [ -e "/cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.3/current/el6-x86_64/setup.sh" ]; then
+    . /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.3/current/el6-x86_64/setup.sh
+fi
+
+gfal-copy $SAMPLE miniaod.root
+gfal-copy $AODFILE aod.root
+
 # run CMSSW
-ARGS="outfile=${JOBNAME} dataset=${SAMPLE} scenario=${SCENARIO}"
+ARGS="outfile=${JOBNAME} dataset=file://miniaod.root scenario=${SCENARIO}"
 cmsRun runMakeTreeFromMiniAOD_cfg.py ${ARGS} privateSample=True 2>&1
 
 CMSEXIT=$?
@@ -102,7 +116,6 @@ fi
 
 # copy output to eos
 echo "gfal-copy output for condor"
-. /cvmfs/oasis.opensciencegrid.org/mis/osg-wn-client/3.3/current/el6-x86_64/setup.sh
 for FILE in *RA2AnalysisTree.root
 do
   echo "gfal-copy -f ${FILE} ${OUTDIR}/${FILE}"
@@ -129,16 +142,20 @@ jdlTemplate = jdlTemplate.replace("EXTRASTUFF", "")
 
 for item in completePaths:
 
+    aodpath = item[0]
     miniaodpath = item[1]
     jobname = miniaodpath.split('/')[-1].split('.root')[0]
 
     jdlFile = jdlTemplate
     jdlFile = jdlFile.replace("JOBNAME", jobname)
     jdlFile = jdlFile.replace("SAMPLE", miniaodpath)
+    jdlFile = jdlFile.replace("AODFILE", aodpath)
     
     fout = open("jobExecCondor_%s.jdl" % jobname, "w")
     fout.write(jdlFile)
     fout.close()
+    #break
+   
 
 
 # write out shell script
@@ -147,7 +164,7 @@ fout.write(shellscript)
 fout.close()
 os.system("chmod +x jobExecCondorSingle.sh")
 
-raw_input("Ready to submit jobs, press <return>")
+#raw_input("Ready to submit jobs, press <return>")
 
-for jdlFile in glob.glob("jobExecCondor_pMSSM12*jdl"):
+for jdlFile in glob.glob("jobExecCondor_*jdl"):
     os.system("condor_submit %s" % jdlFile)
