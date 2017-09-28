@@ -121,6 +121,7 @@ scenario=""
             VectorInt.extend(['DisappearingTracks:chiCands@nMissingMiddleHits(chiCands_nMissingMiddleHits)']) 
             VectorInt.extend(['DisappearingTracks:chiCands@nValidPixelHits(chiCands_nValidPixelHits)']) 
             VectorInt.extend(['DisappearingTracks:chiCands@nValidTrackerHits(chiCands_nValidTrackerHits)']) 
+            VectorDouble.extend(['DisappearingTracks:chiCands@ptError(chiCands_ptError)'])          
             VectorDouble.extend(['DisappearingTracks:chiCands@chi2perNdof(chiCands_chi2perNdof)'])          
             VectorDouble.extend(['DisappearingTracks:chiCands@trkRelIso(chiCands_trkRelIso)'])   
             VectorDouble.extend(['DisappearingTracks:chiCands@trkMiniRelIso(chiCands_trkMiniRelIso)'])          
