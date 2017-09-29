@@ -430,10 +430,10 @@ void DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetu
     double neutralWithoutGammaPtSum = 0;
     for( const auto& pfCand : *pfCands) {
         double dR = deltaR(track, pfCand);
-        if ( (dR > 0.01) && (dR < maxChargedPFCandSumDR) && (pfCand.charge() != 0) )
+        if ( (dR < maxChargedPFCandSumDR) && (pfCand.charge() != 0) )
                 chargedPtSum += pfCand.pt();
 
-        if ( (dR > 0.01) && (dR < maxNeutralPFCandSumDR) && (pfCand.charge() == 0) ) {
+        if ( (dR < maxNeutralPFCandSumDR) && (pfCand.charge() == 0) ) {
                 neutralPtSum += pfCand.pt();
                 if (pfCand.pdgId() != 22) neutralWithoutGammaPtSum += pfCand.pt();
         }
