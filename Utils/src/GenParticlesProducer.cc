@@ -102,7 +102,7 @@ GenParticlesProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	{
 	  const reco::Candidate * daughter1 = iPart->daughter(0);
 	  float displacement_cm = sqrt(std::pow(iPart->vx()-daughter1->vx(),2)+std::pow(iPart->vy()-daughter1->vy(),2));
-	  int displacementMM = displacement_cm*10;
+	  float displacementMM = displacement_cm*10;
 	  LabXYmm_vec->push_back(displacementMM);
 	}
       else LabXYmm_vec->push_back(0);

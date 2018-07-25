@@ -218,7 +218,7 @@ process = makeTreeFromMiniAOD(process,
 )
 
 # final tweaks to process
-process.options.SkipEvent = cms.untracked.vstring('ProductNotFound')
+process.options.SkipEvent = cms.untracked.vstring('MismatchedInputFiles')
 process.TFileService.closeFileFast = cms.untracked.bool(True)
 if mp:
     process.IgProfService = cms.Service("IgProfService",

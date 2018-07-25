@@ -128,6 +128,7 @@ def generateSubmission(options,verbose,filesConfig,scenario,firstJob,filesSet,ru
         # submit jobs to condor, if -s was specified
         if options.submit:
             os.system("condor_submit jobExecCondor_"+jobname+".jdl")
+            #quit()
 
     if verbose and data: print "("+str(nActualJobs)+" actual jobs)"
 

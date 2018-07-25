@@ -373,14 +373,15 @@ void DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetu
     itrack+=1;
 
     // track kinematics:
-    bool trackKinematics = ((track.pt() > minTrackPt) && (std::abs(track.eta())) < maxTrackEta);
+    // bool trackKinematics = ((track.pt() > minTrackPt) && (std::abs(track.eta())) < maxTrackEta);
+    bool trackKinematics = track.pt() > minTrackPt;
     if (!(trackKinematics)) continue;
 
     bool passExo16044Kinematics = track.pt() > 55 && std::abs(track.eta()) < 2.1;
 
     // vertex consistency:
     bool vertex_match = std::abs(track.dxy(vtx.position())) < maxDxy && std::abs(track.dz(vtx.position())) < maxDz;
-    if (!(vertex_match)) continue;
+    // if (!(vertex_match)) continue;
 
     //This completes the loose candidate selection.
 
@@ -437,8 +438,11 @@ void DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetu
                 neutralPtSum += pfCand.pt();
                 if (pfCand.pdgId() != 22) neutralWithoutGammaPtSum += pfCand.pt();
         }
-        if (dR > 0.01) passPFCandVeto = true;
-        else passPFCandVeto = false;
+        // PF lepton veto
+        passPFCandVeto = true;
+        if ( (std::abs(pfCand.pdgId()) == 11) || (std::abs(pfCand.pdgId()) == 13) || (std::abs(pfCand.pdgId()) == 15) ) {
+            if (dR < 0.01) passPFCandVeto = false;
+        }
     }
     chiCands_chargedPtSum->push_back(chargedPtSum);
     chiCands_neutralPtSum->push_back(neutralPtSum);
