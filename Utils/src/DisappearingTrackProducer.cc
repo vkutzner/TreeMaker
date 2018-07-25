@@ -360,25 +360,25 @@ void DisappearingTrackProducer::produce(edm::Event& iEvent, const edm::EventSetu
     itrack+=1;
 
     // check track kinematics:
-    bool trackKinematics = ((track.pt() > minTrackPt) && (std::abs(track.eta())) < maxTrackEta);
+    bool trackKinematics = (track.pt() > minTrackPt);
     if (!(trackKinematics)) continue;
 
     bool passExo16044Kinematics = track.pt() > 55 && std::abs(track.eta()) < 2.1;
 
     // check gaps veto:
-    if ((std::abs(track.eta()) > 0.15) && (std::abs(track.eta()) < 0.35)) continue;
-    if ((std::abs(track.eta()) > 1.55) && (std::abs(track.eta()) < 1.85)) continue;
-    if ((std::abs(track.eta()) > 1.42) && (std::abs(track.eta()) < 1.65)) continue;
+    //if ((std::abs(track.eta()) > 0.15) && (std::abs(track.eta()) < 0.35)) continue;
+    //if ((std::abs(track.eta()) > 1.55) && (std::abs(track.eta()) < 1.85)) continue;
+    //if ((std::abs(track.eta()) > 1.42) && (std::abs(track.eta()) < 1.65)) continue;
 
     // check dead or noisy calo cells:
-    bool noDeadNoisyECALInTrackCone = checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsEB, track, CaloGeomHandle, deadNoisyDR) &
-    checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsEE, track, CaloGeomHandle, deadNoisyDR) &
-    checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsES, track, CaloGeomHandle, deadNoisyDR);
-    if (!(noDeadNoisyECALInTrackCone)) continue;
+    //bool noDeadNoisyECALInTrackCone = checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsEB, track, CaloGeomHandle, deadNoisyDR) &
+    //checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsEE, track, CaloGeomHandle, deadNoisyDR) &
+    //checkNoDeadNoisyECALInTrackCone(reducedEcalRecHitsES, track, CaloGeomHandle, deadNoisyDR);
+    //if (!(noDeadNoisyECALInTrackCone)) continue;
 
     // do vertex consistency:
     bool vertex_match = std::abs(track.dxy(vtx.position())) < maxDxy && std::abs(track.dz(vtx.position())) < maxDz;
-    if (!(vertex_match)) continue;
+    //if (!(vertex_match)) continue;
 
     //This completes the loose candidate selection, so now fill the products depending only on track object
     TLorentzVector tlv;
