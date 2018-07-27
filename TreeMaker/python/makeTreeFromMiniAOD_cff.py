@@ -18,8 +18,8 @@ def makeTreeFromMiniAOD(self,process):
     )
     process.source = cms.Source("PoolSource",
         #fileNames = cms.untracked.vstring(self.readFiles),
-        fileNames = cms.untracked.vstring("file:/afs/desy.de/user/k/kutznerv/dust/SignalMC-CMSSW8/miniAODSIM/g1800_chi1400_27_200970_step4_50AODSIM_961nFiles1.root"),
-        secondaryFileNames = cms.untracked.vstring("file:/afs/desy.de/user/k/kutznerv/dust/SignalMC-CMSSW8/miniAODSIM/g1800_chi1400_27_200970_step4_50AODSIM_961nFiles1.root"),        
+        fileNames = cms.untracked.vstring("file:/afs/desy.de/user/k/kutznerv/dust/SignalMC-CMSSW8/miniAODSIM/g1800_chi1400_27_200970_step4_50AODSIM_961nFiles1.root"), #FIXME
+        secondaryFileNames = cms.untracked.vstring("file:/afs/desy.de/user/k/kutznerv/dust/SignalMC-CMSSW8/AODSIM/g1800_chi1400_27_200970_step3_50AODSIM_961nFiles1.root"), #FIXME 
         inputCommands = cms.untracked.vstring('keep *','drop LHERunInfoProduct_*_*_*'),
     )
     if len(self.jsonfile)>0: process.source.lumisToProcess = LumiList.LumiList(filename = self.jsonfile).getVLuminosityBlockRange()
@@ -39,6 +39,7 @@ def makeTreeFromMiniAOD(self,process):
         VarsInt                    = self.VarsInt,
         VarsBool                   = self.VarsBool,
         VectorTLorentzVector       = self.VectorTLorentzVector,
+        VectorTrack                = self.VectorTrack,
         VectorDouble               = self.VectorDouble,
         VectorInt                  = self.VectorInt,
         VectorString               = self.VectorString,
@@ -59,6 +60,13 @@ def makeTreeFromMiniAOD(self,process):
     ## ----------------------------------------------------------------------------------------------
     ## SUSY scan info
     ## ----------------------------------------------------------------------------------------------
+
+    from TreeMaker.Utils.disappearingtrackproducer_cfi import disappearingTracks
+    process.DisappearingTracks = disappearingTracks.clone(
+        doDeDx = cms.bool(False),
+    ) 
+    self.VectorTLorentzVector.extend(['DisappearingTracks:chiCands(chiCands)'])
+
     if self.geninfo:
         # mother and LSP masses for SUSY signal scans
         # branches always added, but only have values for fastsim samples

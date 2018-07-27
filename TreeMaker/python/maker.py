@@ -93,6 +93,7 @@ class maker:
         self.VectorString               = cms.vstring()
         self.VectorInt                  = cms.vstring()
         self.VectorBool                 = cms.vstring()
+        self.VectorTrack                = cms.vstring()
         self.VectorVectorBool           = cms.vstring()
         self.VectorVectorInt            = cms.vstring()
         self.VectorVectorDouble         = cms.vstring()
