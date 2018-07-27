@@ -4,6 +4,8 @@
 #include "DataFormats/Common/interface/Wrapper.h"
 #include "DataFormats/Common/interface/PtrVector.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackReco/interface/TrackFwd.h" 
 
 namespace {
   struct dictionary {
@@ -11,6 +13,7 @@ namespace {
     std::vector<pat::Jet> vpj;
     std::vector<std::vector<TLorentzVector> > vvlv;
     std::vector<std::vector<pat::Jet> > vvpj;
+    std::vector<reco::Track> vtrk;
 	edm::PtrVector<pat::PackedCandidate> rv2pp;
     edm::Wrapper<std::vector<TLorentzVector> > wvlv;
     edm::Wrapper<std::vector<std::vector<TLorentzVector> > > wvvlv;
@@ -18,5 +21,6 @@ namespace {
     edm::Wrapper<std::vector<std::vector<int> > > wvvi;
     edm::Wrapper<std::vector<std::vector<bool> > > wvvb;
 	edm::Wrapper<edm::PtrVector<pat::PackedCandidate> > wrv2pp;
+    edm::Wrapper<std::vector<reco::Track> > wrvtrk;
   };
 }

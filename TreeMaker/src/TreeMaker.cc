@@ -39,7 +39,7 @@ TreeMaker::TreeMaker(const edm::ParameterSet& iConfig) :
 		t_bool,t_int,t_double,t_string,t_lorentz,
 		t_vbool,t_vint,t_vdouble,t_vstring,t_vlorentz,
 		t_vvbool,t_vvint,t_vvdouble,t_vvstring,t_vvlorentz,
-		t_recocand
+		t_recocand, t_vtrack
 	}
 {
 	usesResource("TFileService");
@@ -81,6 +81,7 @@ TreeMaker::TreeMaker(const edm::ParameterSet& iConfig) :
 				case TreeTypes::t_vvstring : tmp = new TreeObject<vector<vector<string>>>(VarName); break;
 				case TreeTypes::t_vvlorentz: tmp = new TreeObject<vector<vector<TLorentzVector>>>(VarName); break;
 				case TreeTypes::t_recocand : tmp = new TreeRecoCand(VarName,doLorentz); break;
+				case TreeTypes::t_vtrack   : tmp = new TreeObject<vector<reco::Track> >(VarName); break; 
 			}
 			//if a known type was found, initialize and store the object
 			if(tmp) {
