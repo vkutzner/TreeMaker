@@ -115,6 +115,7 @@ class maker:
         print " outfile: "+self.outfile
         print " treename: "+self.treename
         print " "        
+        print " sidecar: "+str(self.sidecar)
         print " privateSample: "+str(self.privateSample)
         print " fastsim: "+str(self.fastsim)
         print " "

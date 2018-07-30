@@ -3,6 +3,35 @@
 
 import FWCore.ParameterSet.Config as cms
 import sys,os
+import commands
+
+def get_parent_aod_files(miniaod_files):
+    
+    parent_files = []
+    
+    for miniaod_file in miniaod_files:
+        simple_url = miniaod_file.split("root://cmsxrootd.fnal.gov/")[-1]
+        parent_list = commands.getstatusoutput('dasgoclient --query="parent file=%s"' % simple_url)[1].split("\n")
+                
+        for parent in parent_list:
+            
+            if "/RAW/" in parent:
+                # we're getting RAW instead of AOD for the parent file, this happens with data
+                child_files = commands.getstatusoutput('dasgoclient --query="child file=%s"' % parent)[1].split("\n")
+                for child_file in child_files:
+                    campaign = miniaod_file.split("/MINIAOD/")[1].split("/")[0]
+                    if "/AOD/%s" % campaign in child_file:
+                        parent_files.append("root://cmsxrootd.fnal.gov/" + child_file)
+                        
+            else:
+                parent_files.append("root://cmsxrootd.fnal.gov/" + parent)
+                
+    # make sure the output list doesn't contain duplicates:
+    parent_files = list(set(parent_files))
+
+    return parent_files
+        
+
 def makeTreeFromMiniAOD(self,process):
 
     ## ----------------------------------------------------------------------------------------------
@@ -24,11 +53,31 @@ def makeTreeFromMiniAOD(self,process):
     #)
 
     if self.readFilesPrimary != "" and self.readFilesSecondary != "":
+        
+        self.sidecar = True
+        
         process.source = cms.Source("PoolSource",
             fileNames = cms.untracked.vstring(self.readFilesPrimary),
             secondaryFileNames = cms.untracked.vstring(self.readFilesSecondary),
             inputCommands = cms.untracked.vstring('keep *','drop LHERunInfoProduct_*_*_*'),
         )
+        
+        print "*** Using primary input files:", self.readFilesPrimary
+        print "*** Using secondary input files:", self.readFilesSecondary
+        
+    elif self.sidecar:
+                
+        parent_files = get_parent_aod_files(self.readFiles)
+        
+        process.source = cms.Source("PoolSource",
+            fileNames = cms.untracked.vstring(self.readFiles),
+            secondaryFileNames = cms.untracked.vstring(parent_files),
+            inputCommands = cms.untracked.vstring('keep *','drop LHERunInfoProduct_*_*_*'),
+        )
+        
+        print "*** Using primary input files:", self.readFiles
+        print "*** Using secondary input files:", parent_files
+        
     else:
         process.source = cms.Source("PoolSource",
             fileNames = cms.untracked.vstring(self.readFiles),
