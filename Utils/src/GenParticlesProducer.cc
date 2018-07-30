@@ -67,6 +67,7 @@ debug(iConfig.getParameter<bool>("debug"))
     produces< std::vector< int > >("Parent");
     produces< std::vector< int > >("ParentId");
     produces< std::vector< bool > >("TTFlag");
+    produces< std::vector< int > >("LabXYcm");
 }
 
 GenParticlesProducer::~GenParticlesProducer() {
@@ -90,6 +91,7 @@ void GenParticlesProducer::produce(edm::StreamID, edm::Event& iEvent, const edm:
     auto ParentId_vec = std::make_unique<std::vector<int>>();
     auto parents = std::make_unique<std::vector<TLorentzVector>>();
     auto TTFlag_vec = std::make_unique<std::vector<bool>>();
+    auto LabXYcm_vec = std::make_unique<std::vector<int>>();
 
     edm::Handle< View<reco::GenParticle> > genPartCands;
     iEvent.getByToken(genCollectionTok, genPartCands);
@@ -112,7 +114,16 @@ void GenParticlesProducer::produce(edm::StreamID, edm::Event& iEvent, const edm:
         bool acceptableParent = typicalParent && (iPart.isLastCopy() || status==21);
         //bool acceptableChild = typicalChild && (status==1 || status==2 || (status>20 && status<30));
         bool acceptableChild = typicalChild && iPart.isLastCopy();
-        if (!(acceptableChild || acceptableParent || keepAllThese || firstDecayProducts)) continue;
+        bool acceptableChargino = (abs(iPart.pdgId())==1000024 && status==1); 
+        if (!(acceptableChild || acceptableParent || keepAllThese || firstDecayProducts || acceptableChargino)) continue;
+
+        if (iPart.numberOfDaughters()>0)
+        	{
+        	  const reco::Candidate * daughter1 = iPart.daughter(0);
+        	  float displacement = sqrt(std::pow(iPart.vx()-daughter1->vx(),2)+std::pow(iPart.vy()-daughter1->vy(),2));
+        	  LabXYcm_vec->push_back(displacement);
+        	}
+              else LabXYcm_vec->push_back(0);
 
         TLorentzVector temp;
         temp.SetPxPyPzE(iPart.px(), iPart.py(), iPart.pz(), iPart.energy());
@@ -167,6 +178,7 @@ void GenParticlesProducer::produce(edm::StreamID, edm::Event& iEvent, const edm:
     iEvent.put(std::move(ParentId_vec   ), "ParentId");
     iEvent.put(std::move(Parent_vec     ), "Parent");
     iEvent.put(std::move(TTFlag_vec     ), "TTFlag");
+    iEvent.put(std::move(LabXYcm_vec ), "LabXYcm" );
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------

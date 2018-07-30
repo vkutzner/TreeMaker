@@ -27,6 +27,10 @@ class maker:
         self.outfile += outfilesuff
         self.getParamDefault("treename","PreSelection")
         
+        self.getParamDefault("sidecar",True)
+        self.getParamDefault("privateSample",False)
+        self.getParamDefault("fastsim",False)
+
         # background estimations on by default
         self.getParamDefault("lostlepton", True)
         self.getParamDefault("hadtau", False)
@@ -44,7 +48,7 @@ class maker:
         # other options off by default
         self.getParamDefault("debugtracks", False)
         self.getParamDefault("applybaseline", False)
-        
+
         # take command line input (w/ defaults from scenario if specified)
         self.getParamDefault("globaltag",self.scenario.globaltag)
         self.getParamDefault("tagname",self.scenario.tagname)
@@ -60,7 +64,9 @@ class maker:
         self.getParamDefault("pufile",self.scenario.pufile)
         self.getParamDefault("era",self.scenario.era)
         self.getParamDefault("localera",self.scenario.localera)
-        
+        self.getParamDefault("readFilesPrimary", "")
+        self.getParamDefault("readFilesSecondary", "")
+
         # temporary redirector fix
         # fastsim signal is phedexed to LPC Tier3
         self.getParamDefault("redir", "root://cmseos.fnal.gov/" if self.fastsim and self.signal else "root://cmsxrootd.fnal.gov/")
@@ -70,6 +76,7 @@ class maker:
         
         # Load input files
         self.readFiles = cms.untracked.vstring()
+
 
         if self.inputFilesConfig!="" :
             readFilesImport = getattr(__import__("TreeMaker.Production."+self.inputFilesConfig+"_cff",fromlist=["readFiles"]),"readFiles")
@@ -107,6 +114,9 @@ class maker:
         print " readFiles: "+str(self.readFiles)
         print " outfile: "+self.outfile
         print " treename: "+self.treename
+        print " "        
+        print " privateSample: "+str(self.privateSample)
+        print " fastsim: "+str(self.fastsim)
         print " "
         print " storing lostlepton variables: "+str(self.lostlepton)
         print " storing hadtau variables: "+str(self.hadtau)+" w/ reclustering "+str(self.hadtaurecluster)

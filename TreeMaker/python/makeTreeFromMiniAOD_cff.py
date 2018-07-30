@@ -16,12 +16,25 @@ def makeTreeFromMiniAOD(self,process):
     process.maxEvents = cms.untracked.PSet(
         input = cms.untracked.int32(self.numevents)
     )
-    process.source = cms.Source("PoolSource",
-        #fileNames = cms.untracked.vstring(self.readFiles),
-        fileNames = cms.untracked.vstring("file:/afs/desy.de/user/k/kutznerv/dust/SignalMC-CMSSW8/miniAODSIM/g1800_chi1400_27_200970_step4_50AODSIM_961nFiles1.root"), #FIXME
-        secondaryFileNames = cms.untracked.vstring("file:/afs/desy.de/user/k/kutznerv/dust/SignalMC-CMSSW8/AODSIM/g1800_chi1400_27_200970_step3_50AODSIM_961nFiles1.root"), #FIXME 
-        inputCommands = cms.untracked.vstring('keep *','drop LHERunInfoProduct_*_*_*'),
-    )
+
+    #process.source = cms.Source("PoolSource",
+        #fileNames = cms.untracked.vstring("file:/afs/desy.de/user/k/kutznerv/dust/SignalMC-CMSSW8/miniAODSIM/g1800_chi1400_27_200970_step4_50AODSIM_961nFiles1.root"), #FIXME
+        #secondaryFileNames = cms.untracked.vstring("file:/afs/desy.de/user/k/kutznerv/dust/SignalMC-CMSSW8/AODSIM/g1800_chi1400_27_200970_step3_50AODSIM_961nFiles1.root"), #FIXME 
+    #    inputCommands = cms.untracked.vstring('keep *','drop LHERunInfoProduct_*_*_*'),
+    #)
+
+    if self.readFilesPrimary != "" and self.readFilesSecondary != "":
+        process.source = cms.Source("PoolSource",
+            fileNames = cms.untracked.vstring(self.readFilesPrimary),
+            secondaryFileNames = cms.untracked.vstring(self.readFilesSecondary),
+            inputCommands = cms.untracked.vstring('keep *','drop LHERunInfoProduct_*_*_*'),
+        )
+    else:
+        process.source = cms.Source("PoolSource",
+            fileNames = cms.untracked.vstring(self.readFiles),
+            inputCommands = cms.untracked.vstring('keep *','drop LHERunInfoProduct_*_*_*'),
+        )
+
     if len(self.jsonfile)>0: process.source.lumisToProcess = LumiList.LumiList(filename = self.jsonfile).getVLuminosityBlockRange()
 
     # output file
@@ -62,10 +75,44 @@ def makeTreeFromMiniAOD(self,process):
     ## ----------------------------------------------------------------------------------------------
 
     from TreeMaker.Utils.disappearingtrackproducer_cfi import disappearingTracks
-    process.DisappearingTracks = disappearingTracks.clone(
-        doDeDx = cms.bool(False),
-    ) 
+    process.DisappearingTracks = disappearingTracks.clone() 
     self.VectorTLorentzVector.extend(['DisappearingTracks:chiCands(chiCands)'])
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@dxyVtx(chiCands_dxyVtx)'])
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@dzVtx(chiCands_dzVtx)'])
+    self.VectorInt.extend(['DisappearingTracks:chiCands@pixelLayersWithMeasurement(chiCands_pixelLayersWithMeasurement)'])
+    self.VectorInt.extend(['DisappearingTracks:chiCands@trackerLayersWithMeasurement(chiCands_trackerLayersWithMeasurement)'])
+    self.VectorInt.extend(['DisappearingTracks:chiCands@nMissingOuterHits(chiCands_nMissingOuterHits)'])
+    self.VectorInt.extend(['DisappearingTracks:chiCands@nMissingInnerHits(chiCands_nMissingInnerHits)'])
+    self.VectorInt.extend(['DisappearingTracks:chiCands@nMissingMiddleHits(chiCands_nMissingMiddleHits)']) 
+    self.VectorInt.extend(['DisappearingTracks:chiCands@nValidPixelHits(chiCands_nValidPixelHits)']) 
+    self.VectorInt.extend(['DisappearingTracks:chiCands@nValidTrackerHits(chiCands_nValidTrackerHits)']) 
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@chi2perNdof(chiCands_chi2perNdof)'])          
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@trkRelIso(chiCands_trkRelIso)'])   
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@trkMiniRelIso(chiCands_trkMiniRelIso)'])          
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@trackJetIso(chiCands_trackJetIso)'])
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@trackLeptonIso(chiCands_trackLeptonIso)'])                    
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@matchedCaloEnergy(chiCands_matchedCaloEnergy)'])
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@chargedPtSum(chiCands_chargedPtSum)'])
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@neutralPtSum(chiCands_neutralPtSum)'])
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@neutralWithoutGammaPtSum(chiCands_neutralWithoutGammaPtSum)'])
+    if not self.fastsim: self.VectorDouble.extend(['DisappearingTracks:chiCands@deDxHarmonic2(chiCands_deDxHarmonic2)']) 
+    self.VectorBool.extend(['DisappearingTracks:chiCands@passExo16044Tag(chiCands_passExo16044Tag)']) 
+    self.VectorBool.extend(['DisappearingTracks:chiCands@passExo16044JetIso(chiCands_passExo16044JetIso)']) 
+    self.VectorBool.extend(['DisappearingTracks:chiCands@passExo16044LepIso(chiCands_passExo16044LepIso)'])        
+    self.VectorBool.extend(['DisappearingTracks:chiCands@trackQualityUndef(chiCands_trackQualityUndef)'])        
+    self.VectorBool.extend(['DisappearingTracks:chiCands@trackQualityLoose(chiCands_trackQualityLoose)'])        
+    self.VectorBool.extend(['DisappearingTracks:chiCands@trackQualityTight(chiCands_trackQualityTight)'])        
+    self.VectorBool.extend(['DisappearingTracks:chiCands@trackQualityHighPurity(chiCands_trackQualityHighPurity)'])        
+    self.VectorBool.extend(['DisappearingTracks:chiCands@trackQualityConfirmed(chiCands_trackQualityConfirmed)'])        
+    self.VectorBool.extend(['DisappearingTracks:chiCands@trackQualityGoodIterative(chiCands_trackQualityGoodIterative)'])        
+    self.VectorBool.extend(['DisappearingTracks:chiCands@trackQualityLooseSetWithPV(chiCands_trackQualityLooseSetWithPV)'])        
+    self.VectorBool.extend(['DisappearingTracks:chiCands@trackQualityHighPuritySetWithPV(chiCands_trackQualityHighPuritySetWithPV)'])        
+    self.VectorBool.extend(['DisappearingTracks:chiCands@trackQualityDiscarded(chiCands_trackQualityDiscarded)'])        
+    self.VectorBool.extend(['DisappearingTracks:chiCands@trackQualitySize(chiCands_trackQualitySize)'])        
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@ptError(chiCands_ptError)'])        
+    self.VectorDouble.extend(['DisappearingTracks:chiCands@matchedCaloEnergyJets(chiCands_matchedCaloEnergyJets)'])
+    self.VectorBool.extend(['DisappearingTracks:chiCands@passPFCandVeto(chiCands_passPFCandVeto)'])        
+
 
     if self.geninfo:
         # mother and LSP masses for SUSY signal scans
@@ -87,6 +134,30 @@ def makeTreeFromMiniAOD(self,process):
             xsecFilename = cms.string('data/pmssm-xsecs-scan1.txt'),
         )
         self.VarsDouble.extend(['Pmssm:PmssmId'])
+
+        # add more gen info
+        if self.privateSample:
+            process.genParticles2 = cms.EDProducer("GenParticlesProducer",
+                                                   genCollection = cms.InputTag("genParticlePlusGeant"),
+                                                   debug = cms.bool(False),
+                                                    childIds = cms.vint32(1,2,3,4,5,11,12,13,14,15,16,22),
+                                                    parentIds = cms.vint32(
+                                                        1,2,6,23,24,25,
+                                                        1000021,1000022,1000023,1000024,1000025,1000035,1000037,1000039,
+                                                        1000001,1000002,1000003,1000004,1000005,1000006,
+                                                        2000001,2000002,2000003,2000004,2000005,2000006,
+                                                        4900023,4900101,4900111,4900211,
+                                                        5000001,5000002,
+                                                    ),
+                                                    keepIds = cms.vint32(6,23,24,25),
+                                                    keepFirst = cms.bool(True),
+            )
+            self.VectorTLorentzVector.append("genParticles2(GenParticlesGeant)")
+            self.VectorInt.append("genParticles2:PdgId(GenParticlesGeant_PdgId)")
+            self.VectorInt.append("genParticles2:Status(GenParticlesGeant_Status)")
+            self.VectorInt.append("genParticles2:LabXYcm(GenParticlesGeant_LabXYcm)")
+            self.VectorInt.append("genParticles2:Parent(GenParticlesGeant_ParentIdx)")
+            self.VectorInt.append("genParticles2:ParentId(GenParticlesGeant_ParentId)")        
 
 
     ## ----------------------------------------------------------------------------------------------
