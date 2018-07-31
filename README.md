@@ -1,4 +1,4 @@
-# TreeMaker
+# TreeMaker (with AOD sidecar support)
 
 <!-- MarkdownTOC levels="2,3" autolink="true" -->
 
