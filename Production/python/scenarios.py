@@ -29,6 +29,18 @@ class Scenario:
                 era="Run2_2016",
                 localera="TM2016",
             )
+        elif sname == "April18Test":
+            self.set_vars(
+                globaltag="94X_mc2017_realistic_v14",
+                tagname="PAT",
+                hlttagname="HLT",
+                geninfo=True,
+                jecfile="data/jec/Fall17_17Nov2017_V8_MC",
+                jerfile="data/jer/Summer16_25nsV1_MC",
+                pufile="TreeMaker/Production/test/data/PileupHistograms_0721_63mb_pm5.root",
+                era="Run2_2017",
+                localera="TM2017",
+            )
         elif sname == "Summer16":
             self.set_vars(
                 globaltag="80X_mcRun2_asymptotic_2016_TrancheIV_v6",
