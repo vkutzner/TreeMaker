@@ -16,7 +16,7 @@ usage(){
 }
 
 FORK=vkutzner
-BRANCH=Run2_2018_prompt
+BRANCH=Run2_2018_sidecar
 ACCESS=ssh
 CORES=8
 LINKMXNET=""
