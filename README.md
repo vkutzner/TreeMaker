@@ -18,7 +18,7 @@
 The following installation instructions assume the user wants to process 2018 prompt data.
 
 ```
-wget https://raw.githubusercontent.com/TreeMaker/TreeMaker/Run2_2018_prompt/setup.sh
+wget https://raw.githubusercontent.com/vkutzner/TreeMaker/Run2_2018_sidecar/setup.sh
 chmod +x setup.sh
 ./setup.sh
 cd CMSSW_10_1_7/src/

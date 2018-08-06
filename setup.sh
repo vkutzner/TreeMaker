@@ -15,7 +15,7 @@ usage(){
 	exit $EXIT
 }
 
-FORK=TreeMaker
+FORK=vkutzner
 BRANCH=Run2_2018_prompt
 ACCESS=ssh
 CORES=8
