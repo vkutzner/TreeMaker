@@ -69,7 +69,9 @@ class maker:
 
         # temporary redirector fix
         # fastsim signal is phedexed to LPC Tier3
-        self.getParamDefault("redir", "root://cmseos.fnal.gov/" if self.fastsim and self.signal else "root://cmsxrootd.fnal.gov/")
+        #self.getParamDefault("redir", "root://cmseos.fnal.gov/" if self.fastsim and self.signal else "root://cmsxrootd.fnal.gov/")
+        self.getParamDefault("redir", "root://xrootd-cms.infn.it/")         # can also try root://xrootd-itb.unl.edu/
+
         # handle site name usage
         if self.redir[0]=="T":
             self.redir = "root://cmsxrootd.fnal.gov//store/test/xrootd/"+self.redir

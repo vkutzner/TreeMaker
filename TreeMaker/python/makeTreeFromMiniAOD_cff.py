@@ -5,12 +5,12 @@ import FWCore.ParameterSet.Config as cms
 import sys,os
 import commands
 
-def get_parent_aod_files(miniaod_files):
+def get_parent_aod_files(miniaod_files, redirector):
     
     parent_files = []
     
     for miniaod_file in miniaod_files:
-        simple_url = miniaod_file.split("root://cmsxrootd.fnal.gov/")[-1]
+        simple_url = miniaod_file.split(redirector)[-1]
         parent_list = commands.getstatusoutput('dasgoclient --query="parent file=%s"' % simple_url)[1].split("\n")
                 
         for parent in parent_list:
@@ -21,10 +21,10 @@ def get_parent_aod_files(miniaod_files):
                 for child_file in child_files:
                     campaign = miniaod_file.split("/MINIAOD/")[1].split("/")[0]
                     if "/AOD/%s" % campaign in child_file:
-                        parent_files.append("root://cmsxrootd.fnal.gov/" + child_file)
+                        parent_files.append(redirector + child_file)
                         
             else:
-                parent_files.append("root://cmsxrootd.fnal.gov/" + parent)
+                parent_files.append(redirector + parent)
                 
     # make sure the output list doesn't contain duplicates:
     parent_files = list(set(parent_files))
@@ -67,8 +67,8 @@ def makeTreeFromMiniAOD(self,process):
         
     elif self.sidecar:
                 
-        parent_files = get_parent_aod_files(self.readFiles)
-        
+        parent_files = get_parent_aod_files(self.readFiles, self.redir)
+       
         process.source = cms.Source("PoolSource",
             fileNames = cms.untracked.vstring(self.readFiles),
             secondaryFileNames = cms.untracked.vstring(parent_files),

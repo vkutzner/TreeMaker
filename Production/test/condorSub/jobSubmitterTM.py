@@ -94,7 +94,8 @@ class jobSubmitterTM(jobSubmitter):
                     runlist = LumiList(self.json).getRuns()
 
                 # grab full file list from config files
-                readFiles = getattr(__import__("TreeMaker.Production."+filesConfig+"_cff",fromlist=["readFiles"]),"readFiles")
+		print "TreeMaker.Production."+filesConfig+"_cff"
+                readFiles = getattr(__import__("TreeMaker.Production." + scenarioName + "." +filesConfig+"_cff",fromlist=["readFiles"]),"readFiles")
 
                 # to keep track of how many data files have been divied up
                 fileListLen = len(readFiles)
@@ -154,7 +155,7 @@ class jobSubmitterTM(jobSubmitter):
                     if self.prepare:
                         jname = job.makeName(job.nums[-1])
                         with open("input/args_"+jname+".txt",'w') as argfile:
-                            args = (self.args+" " if len(self.args)>0 else "")+"outfile="+jname+" inputFilesConfig="+filesConfig+" nstart="+str(nstart)+" nfiles="+str(self.nFiles)+" scenario="+scenarioName
+                            args = (self.args+" " if len(self.args)>0 else "")+"outfile="+jname+" inputFilesConfig="+scenarioName+"."+filesConfig+" nstart="+str(nstart)+" nfiles="+str(self.nFiles)+" scenario="+scenarioName
                             argfile.write(args)
 
                 # append queue comment
