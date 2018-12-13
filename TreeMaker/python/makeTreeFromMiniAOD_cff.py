@@ -18,6 +18,7 @@ def makeTreeFromMiniAOD(self,process):
     )
     process.source = cms.Source("PoolSource",
         fileNames = cms.untracked.vstring(self.readFiles),
+        secondaryFileNames=cms.untracked.vstring(self.readFiles_sidecar),
         inputCommands = cms.untracked.vstring('keep *','drop LHERunInfoProduct_*_*_*'),
     )
     if len(self.jsonfile)>0: process.source.lumisToProcess = LumiList.LumiList(filename = self.jsonfile).getVLuminosityBlockRange()
@@ -53,6 +54,57 @@ def makeTreeFromMiniAOD(self,process):
     ## Standard producers
     ## ----------------------------------------------------------------------------------------------
     ## ----------------------------------------------------------------------------------------------
+
+    if self.readFiles_sidecar:
+            print 'yep, we"re in sidecar'
+            from TreeMaker.Utils.isotrackproducer_cfi import isotrackproducer
+            process.IsoTrackProducer = isotrackproducer.clone(
+                doDeDx = cms.bool(not self.fastsim),
+                minTrackPt = cms.double(1.9),
+                maxTrackEta = cms.double(5.0),
+                maxDxy = cms.double(0.2),
+                maxDz = cms.double(0.5),               
+                    )
+            self.VectorTLorentzVector.extend(['IsoTrackProducer:tracks(tracks)'])
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@dxyVtx(tracks_dxyVtx)'])
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@dzVtx(tracks_dzVtx)'])
+            self.VectorInt.extend(['IsoTrackProducer:tracks@pixelLayersWithMeasurement(tracks_pixelLayersWithMeasurement)'])
+            self.VectorInt.extend(['IsoTrackProducer:tracks@trackerLayersWithMeasurement(tracks_trackerLayersWithMeasurement)'])
+            self.VectorInt.extend(['IsoTrackProducer:tracks@nMissingOuterHits(tracks_nMissingOuterHits)'])
+            self.VectorInt.extend(['IsoTrackProducer:tracks@nMissingInnerHits(tracks_nMissingInnerHits)'])
+            self.VectorInt.extend(['IsoTrackProducer:tracks@nMissingMiddleHits(tracks_nMissingMiddleHits)']) 
+            self.VectorInt.extend(['IsoTrackProducer:tracks@nValidPixelHits(tracks_nValidPixelHits)']) 
+            self.VectorInt.extend(['IsoTrackProducer:tracks@nValidTrackerHits(tracks_nValidTrackerHits)']) 
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@ptError(tracks_ptError)'])          
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@chi2perNdof(tracks_chi2perNdof)'])          
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@trkRelIso(tracks_trkRelIso)'])   
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@trkMiniRelIso(tracks_trkMiniRelIso)'])          
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@trackJetIso(tracks_trackJetIso)'])
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@minDrLepton(tracks_minDrLepton)'])                    
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@matchedCaloEnergyJets(tracks_matchedCaloEnergyJets)'])
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@matchedCaloEnergy(tracks_matchedCaloEnergy)'])
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@chargedPtSum(tracks_chargedPtSum)'])
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@neutralPtSum(tracks_neutralPtSum)'])
+            self.VectorDouble.extend(['IsoTrackProducer:tracks@neutralWithoutGammaPtSum(tracks_neutralWithoutGammaPtSum)'])
+            if not self.fastsim: 
+                self.VectorDouble.extend(['IsoTrackProducer:tracks@deDxHarmonic2(tracks_deDxHarmonic2)']) 
+            self.VectorBool.extend(['IsoTrackProducer:tracks@passExo16044DeadNoisyECALVeto(tracks_passExo16044DeadNoisyECALVeto)']) 
+            self.VectorBool.extend(['IsoTrackProducer:tracks@passExo16044GapsVeto(tracks_passExo16044GapsVeto)'])
+            self.VectorBool.extend(['IsoTrackProducer:tracks@passPFCandVeto(tracks_passPFCandVeto)'])  
+            self.VectorBool.extend(['IsoTrackProducer:tracks@passExo16044Tag(tracks_passExo16044Tag)']) 
+            self.VectorBool.extend(['IsoTrackProducer:tracks@passExo16044JetIso(tracks_passExo16044JetIso)']) 
+            self.VectorBool.extend(['IsoTrackProducer:tracks@passExo16044LepIso(tracks_passExo16044LepIso)'])        
+            self.VectorBool.extend(['IsoTrackProducer:tracks@trackQualityUndef(tracks_trackQualityUndef)'])        
+            self.VectorBool.extend(['IsoTrackProducer:tracks@trackQualityLoose(tracks_trackQualityLoose)'])        
+            self.VectorBool.extend(['IsoTrackProducer:tracks@trackQualityTight(tracks_trackQualityTight)'])        
+            self.VectorBool.extend(['IsoTrackProducer:tracks@trackQualityHighPurity(tracks_trackQualityHighPurity)'])        
+            self.VectorBool.extend(['IsoTrackProducer:tracks@trackQualityConfirmed(tracks_trackQualityConfirmed)'])        
+            self.VectorBool.extend(['IsoTrackProducer:tracks@trackQualityGoodIterative(tracks_trackQualityGoodIterative)'])        
+            self.VectorBool.extend(['IsoTrackProducer:tracks@trackQualityLooseSetWithPV(tracks_trackQualityLooseSetWithPV)'])        
+            self.VectorBool.extend(['IsoTrackProducer:tracks@trackQualityHighPuritySetWithPV(tracks_trackQualityHighPuritySetWithPV)'])        
+            self.VectorBool.extend(['IsoTrackProducer:tracks@trackQualityDiscarded(tracks_trackQualityDiscarded)'])        
+            self.VectorBool.extend(['IsoTrackProducer:tracks@trackQualitySize(tracks_trackQualitySize)'])        
+            self.VectorInt.extend(['IsoTrackProducer:tracks@charge(tracks_charge)'])
 
     ## ----------------------------------------------------------------------------------------------
     ## SUSY scan info
