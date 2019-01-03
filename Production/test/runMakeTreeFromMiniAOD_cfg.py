@@ -15,7 +15,6 @@ threads=parameters.value("threads",1)
 streams=parameters.value("streams",0)
 tmi=parameters.value("tmi",False)
 trace=parameters.value("trace",False)
-
 # print out settings
 print "***** SETUP ************************************"
 theMaker.printSetup()
@@ -81,7 +80,6 @@ if trace:
 
 # setup makeTree modules
 process = theMaker.makeTreeFromMiniAOD(process)
-    
 # if requested, dump and exit
 if dump:
     print process.dumpPython()

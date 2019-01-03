@@ -421,7 +421,6 @@ void IsoTrackProducer::produce(edm::StreamID, edm::Event& iEvent, const edm::Eve
     if (conePtSum_rel / track.pt() <= conePtSumMaxPtFraction) 
     {	
     	passedTrackTrackerIso = true;
-    	continue;
     }
     relIso = conePtSum_rel / track.pt();
     miniIso = conePtSum_mini / track.pt();

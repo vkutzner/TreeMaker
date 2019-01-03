@@ -11,19 +11,15 @@ from TreeMaker.TreeMaker.doZinvBkg import doZinvBkg, reclusterZinv
 
 import os
 def getAODfromMiniAODPath(datasetPathMiniAOD):
-
     print "getAODfromMiniAODPath" , datasetPathMiniAOD
     filepathbits = datasetPathMiniAOD.split('/store')
     if len(filepathbits)==2:
         filepathbits[1] = '/store'+filepathbits[1]
     # get AOD file(s) from MiniAOD file path
-
     # fix SSL site configuration for DAS client:
     os.environ['SSL_CERT_DIR'] = '/etc/pki/tls/certs:/etc/grid-security/certificates'
-
     #parentfiles = check_output(["./data/das_client.py", '--query=parent file=%s' % datasetPathMiniAOD, '--limit=0']) .split()
     parentfiles = []
-    print 'dasgoclient --query="parent file='+filepathbits[1]+'" --limit=0 > '+'tmp.txt'
     os.system('dasgoclient --query="parent file='+filepathbits[1]+'" --limit=0 > '+'tmp.txt')
     ftmp = open('tmp.txt')
     lines = ftmp.readlines()
@@ -38,7 +34,6 @@ def getAODfromMiniAODPath(datasetPathMiniAOD):
             aodFiles.append(parentfile)
         else:
             # parent file is e.g. RAW, so check its children:
-
             # childFiles = check_output(["./data/das_client.py", "--query=child file=%s" % parentfile, '--limit=0']).split()
             childFiles = []
             os.system('dasgoclient --query="child file='+parentfile+'" --limit=0 > '+'tmp.txt')
@@ -67,7 +62,6 @@ class maker:
 
         # to keep track of MET fix, currently applied to all 2017 data and MC
         self.doMETfix = ("Fall17" in self.scenarioName or "2017" in self.scenarioName)
-        
         self.getParamDefault("verbose",True)
         self.getParamDefault("inputFilesConfig","")
         self.getParamDefault("dataset",[])
@@ -120,7 +114,7 @@ class maker:
         self.getParamDefault("wrongpufile",self.scenario.wrongpufile)
         self.getParamDefault("era",self.scenario.era)
         self.getParamDefault("localera",self.scenario.localera)
-            
+        
         # temporary redirector fix
         # fastsim signal is phedexed to LPC Tier3
         self.getParamDefault("redir", "root://cmseos.fnal.gov/" if self.fastsim and self.signal else "root://cmsxrootd.fnal.gov/")
@@ -141,10 +135,11 @@ class maker:
 
         if self.dataset!=[] :    
             self.readFiles.extend( [self.dataset] )
-            
-        for rf in self.readFiles:
-            self.readFiles_sidecar += getAODfromMiniAODPath(rf)            
-            
+        for irf, rf in enumerate(self.readFiles):
+            if '/store/' in rf: self.readFiles_sidecar += getAODfromMiniAODPath(rf)
+            else: 
+            	shpingy = rf.replace('mini','').replace('step4','step3')
+            	self.readFiles_sidecar.append(shpingy)
         self.readFiles = [(self.redir if val[0:6]=="/store" else "")+val for val in self.readFiles]
         self.readFiles_sidecar = [(self.redir if val[0:6]=="/store" else "")+val for val in self.readFiles_sidecar]
         print 'readFiles', self.readFiles
