@@ -414,7 +414,7 @@ void IsoTrackProducer::produce(edm::StreamID, edm::Event& iEvent, const edm::Eve
     else if (track.pt()>200) miniConeDr = 0.05;
     for (const auto& othertrack : *selectedTracks){
         if (!(std::abs(othertrack.dxy(vtx.position()))<0.03 && std::abs(othertrack.dz(vtx.position()))<0.05)) continue;
-        if (deltaR(track, othertrack) == 0) continue;
+        if (deltaR(track, othertrack) < 0.00001) continue;
         if (deltaR(track, othertrack) < coneRelIsoDR) conePtSum_rel += othertrack.pt();
         if (deltaR(track, othertrack) < miniConeDr) conePtSum_mini += othertrack.pt();
     }
